@@ -1,0 +1,4 @@
+rootProject.name = 'Negativity'
+
+include ':universal', ':bungeecord', ':spigot', ':sponge'
+

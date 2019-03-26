@@ -1,0 +1,39 @@
+apply plugin: 'java'
+
+version = pluginVersion
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        name = 'essentials'
+        url = 'http://repo.ess3.net/content/groups/essentials/'
+    }
+    maven {
+        name = 'dmulloy2-repo'
+        url = 'http://repo.dmulloy2.net/nexus/repository/public/'
+    }
+}
+
+dependencies {
+    compile project(':universal')
+
+    compile fileTree(dir: 'lib', include: '*.jar')
+
+    compile('net.ess3:Essentials:2.13.1') {
+        transitive = false
+    }
+
+    compile('com.comphenix.protocol:ProtocolLib-API:4.4.0')
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter ReplaceTokens, tokens: [version: version]
+    }
+}
