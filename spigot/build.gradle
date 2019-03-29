@@ -1,3 +1,7 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
+}
+
 apply plugin: 'java'
 
 version = pluginVersion
@@ -21,13 +25,17 @@ repositories {
 dependencies {
     compile project(':universal')
 
-    compile fileTree(dir: 'lib', include: '*.jar')
+    compileOnly fileTree(dir: 'lib', include: '*.jar')
 
-    compile('net.ess3:Essentials:2.13.1') {
+    compileOnly('net.ess3:Essentials:2.13.1') {
         transitive = false
     }
 
-    compile('com.comphenix.protocol:ProtocolLib-API:4.4.0')
+    compileOnly('com.comphenix.protocol:ProtocolLib-API:4.4.0')
+}
+
+shadowJar {
+    classifier = null
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
