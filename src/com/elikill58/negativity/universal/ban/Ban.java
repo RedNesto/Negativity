@@ -29,7 +29,7 @@ public class Ban {
 			boolean isBanned = false;
 			long time = System.currentTimeMillis();
 			for (BanRequest br : np.getBanRequest())
-				if (((br.getFullTime()) > time || br.isDef()) && !br.isUnban())
+				if (((br.getExpirationTime()) > time || br.isDef()) && !br.isUnban())
 					isBanned = true;
 			return isBanned;
 		} catch (Exception e) {
@@ -56,7 +56,7 @@ public class Ban {
 		} catch (ScriptException e) {
 			e.printStackTrace();
 		}
-		new BanRequest(np, "Cheat (" + cheat.getName() + ")", i,
+		new BanRequest(np.getPlayerId(), "Cheat (" + cheat.getName() + ")", i + System.currentTimeMillis(),
 				np.getBanRequest().size() >= ada.getIntegerInConfig("ban.def.ban_time"), BanType.PLUGIN,
 				cheat.getName(), "Negativity", false).execute();
 	}
@@ -90,7 +90,7 @@ public class Ban {
 		if(!banActive)
 			return true;
 		for (BanRequest br : np.getBanRequest())
-			if ((br.isDef() || (br.getFullTime()) > System.currentTimeMillis()) && !br.isUnban())
+			if ((br.isDef() || (br.getExpirationTime()) > System.currentTimeMillis()) && !br.isUnban())
 				return false;
 		return true;
 	}
