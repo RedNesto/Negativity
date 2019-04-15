@@ -1,23 +1,15 @@
 package com.elikill58.negativity.universal.ban;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.StandardOpenOption;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import com.elikill58.negativity.universal.Database;
-import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
-import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.permissions.Perm;
 
@@ -123,54 +115,8 @@ public class BanRequest {
 		NegativityPlayer nPlayer = ada.getNegativityPlayer(this.uuid);
 		if (nPlayer != null && Perm.hasPerm(nPlayer, "notBanned"))
 			return;
-		if (Ban.banActiveIsFile) {
-			try {
-				f = new File(Ban.banDir, uuid + ".txt");
-				if (!f.exists())
-					f.createNewFile();
-				Files.write(f.toPath(),
-						(expirationTime + ":reason=" + reason.replaceAll(":", "") + ":def=" + def + ":bantype="
-								+ banType.name() + ":ac=" + ac + ":by=" + by + ":unban=false\n").getBytes(),
-						StandardOpenOption.APPEND);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		if (!Ban.banActiveIsFile) {
-			try {
-				String values = ada.getStringInConfig("ban.db.column.uuid") + ","
-						+ ada.getStringInConfig("ban.db.column.time") + "," + ada.getStringInConfig("ban.db.column.def")
-						+ "," + ada.getStringInConfig("ban.db.column.reason") + ","
-						+ ada.getStringInConfig("ban.db.column.cheat_detect") + ","
-						+ ada.getStringInConfig("ban.db.column.by"), parentheses = "";
-				List<String> content = new ArrayList<>();
-				HashMap<String, String> hash = ada.getKeysListInConfig("ban.db.column.other");
-				for (String keys : hash.keySet()) {
-					values += "," + keys;
-					parentheses += ",?";
-					content.add(getWithReplaceOlder(hash.get(keys)));
-				}
-				PreparedStatement stm = Database.getConnection().prepareStatement(
-						"INSERT INTO " + Database.table_ban + "(" + values + ") VALUES (?,?,?,?,?,?" + parentheses + ")");
-				stm.setString(1, uuid.toString());
-				stm.setInt(2, (int) (expirationTime));
-				stm.setBoolean(3, def);
-				stm.setString(4, reason);
-				stm.setString(5, ac);
-				stm.setString(6, by);
-				int i = 7;
-				for (String cc : content) {
-					String s = getWithReplaceOlder(cc);
-					if (UniversalUtils.isInteger(s))
-						stm.setInt(i++, Integer.parseInt(s));
-					else
-						stm.setString(i++, s);
-				}
-				stm.execute();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+
+		BanManager.saveBan(this);
 
 		if (nPlayer != null) {
 			nPlayer.banEffect();
@@ -184,7 +130,6 @@ public class BanRequest {
 		try {
 			this.isUnban = true;
 			Adapter ada = Adapter.getAdapter();
-			ada.getNegativityAccount(this.uuid).removeBanRequest(this);
 			if (ada.getBooleanInConfig("ban.destroy_when_unban")) {
 				if (Ban.banActiveIsFile) {
 					Files.write(f.toPath(), "".getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
@@ -199,20 +144,7 @@ public class BanRequest {
 				}
 			} else {
 				if (Ban.banActiveIsFile) {
-					List<String> lines = Files.readAllLines(f.toPath()), futurLines = new ArrayList<>();
-					for (String l : lines) {
-						if(l.contains("unban=false"))
-							futurLines.add(l.replaceAll("unban=false", "unban=true")); // unbanning
-						else if(!l.contains("unban=true"))
-							futurLines.add(l + ":unban=true"); // unbanning with older version
-						else futurLines.add(l); // already unban
-					}
-					BufferedWriter bw = new BufferedWriter(new PrintWriter(f.getAbsolutePath()));
-					for (String l : futurLines) {
-						bw.write(l);
-						bw.newLine();
-					}
-					bw.close();
+					BanManager.saveBans(ada.getNegativityAccount(uuid).getBanRequest());
 				}
 				if (!Ban.banActiveIsFile) {
 					String uc = ada.getStringInConfig("ban.db.column.uuid");
@@ -233,26 +165,6 @@ public class BanRequest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private String getWithReplaceOlder(String s) {
-		String life = "?";
-		String name = "???";
-		String level = "?";
-		String gamemode = "?";
-		String walkSpeed = "?";
-		NegativityPlayer nPlayer = Adapter.getAdapter().getNegativityPlayer(this.uuid);
-		if (nPlayer != null) {
-			life = String.valueOf(nPlayer.getLife());
-			name = nPlayer.getName();
-			level = String.valueOf(nPlayer.getLevel());
-			gamemode = nPlayer.getGameMode();
-			walkSpeed = String.valueOf(nPlayer.getWalkSpeed());
-		}
-
-		return s.replaceAll("%uuid%", uuid.toString()).replaceAll("%name%", "").replaceAll("%reason%", reason)
-				.replaceAll("%life%", life).replaceAll("%name%", name).replaceAll("%level%", level)
-				.replaceAll("%gm%", gamemode).replaceAll("%walk_speed%", walkSpeed);
 	}
 
 	public static enum BanType {
