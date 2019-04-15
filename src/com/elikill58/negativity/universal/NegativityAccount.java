@@ -1,17 +1,10 @@
 package com.elikill58.negativity.universal;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanRequest;
 import com.elikill58.negativity.universal.utils.NonnullByDefault;
@@ -77,58 +70,12 @@ public class NegativityAccount {
 	public void loadBanRequest(boolean forceReload) {
 		if(!Ban.banActive)
 			return;
+
 		if (!forceReload && gettedBan)
 			return;
-		gettedBan = true;
-		if (Ban.banActiveIsFile) {
-			File banFile = new File(Ban.banDir.getAbsolutePath(), getUUID() + ".txt");
-			if (!banFile.exists())
-				return;
-			try {
-				for (String line : Files.readAllLines(banFile.toPath(), UniversalUtils.getOs().getCharset()))
-					addBanRequest(BanRequest.fromString(this.getPlayerId(), line));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (!Ban.banActiveIsFile) {
-			try {
-				Adapter ada = Adapter.getAdapter();
-				PreparedStatement stm = Database.getConnection()
-						.prepareStatement("SELECT * FROM " + Database.table_ban + " WHERE uuid = ?");
-				stm.setString(1, this.getUUID());
-				ResultSet rs = stm.executeQuery();
-				while (rs.next()) {
-					boolean hasCheatDetect = false, hasBy = false;
-					try {
-						rs.findColumn(ada.getStringInConfig("ban.db.column.cheat_detect"));
-						hasCheatDetect = true;
-					} catch (SQLException sqlexce) {}
-					try {
-						rs.findColumn(ada.getStringInConfig("ban.db.column.by"));
-						hasBy = true;
-					} catch (SQLException sqlexce) {}
-					addBanRequest(new BanRequest(this.getPlayerId(), rs.getString(ada.getStringInConfig("ban.db.column.reason")),
-							rs.getInt(ada.getStringInConfig("ban.db.column.time")),
-							rs.getBoolean(ada.getStringInConfig("ban.db.column.def")), BanRequest.BanType.UNKNOW,
-							hasCheatDetect ? rs.getString(ada.getStringInConfig("ban.db.column.cheat_detect")) : "Unknow",
-							hasBy ? rs.getString(ada.getStringInConfig("ban.db.column.by")) : "console", false));
-				}
-				rs.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
 
-	public void addBanRequest(BanRequest br) {
-		List<BanRequest> brList = new ArrayList<>();
-		brList.addAll(banRequest);
-		for (BanRequest actualBr : brList)
-			if (br.getBy().equals(actualBr.getBy()) && br.getReason().equals(actualBr.getReason())
-					&& br.getExpirationTime() == actualBr.getExpirationTime())
-				return;
-		banRequest.add(br);
+		gettedBan = true;
+		banRequest = BanManager.loadBans(getPlayerId());
 	}
 
 	public String getBanReason() {
