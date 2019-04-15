@@ -87,7 +87,7 @@ public class NegativityAccount {
 				return;
 			try {
 				for (String line : Files.readAllLines(banFile.toPath(), UniversalUtils.getOs().getCharset()))
-					addBanRequest(new BanRequest(this, line));
+					addBanRequest(BanRequest.fromString(this.getPlayerId(), line));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -109,7 +109,7 @@ public class NegativityAccount {
 						rs.findColumn(ada.getStringInConfig("ban.db.column.by"));
 						hasBy = true;
 					} catch (SQLException sqlexce) {}
-					addBanRequest(new BanRequest(this, rs.getString(ada.getStringInConfig("ban.db.column.reason")),
+					addBanRequest(new BanRequest(this.getPlayerId(), rs.getString(ada.getStringInConfig("ban.db.column.reason")),
 							rs.getInt(ada.getStringInConfig("ban.db.column.time")),
 							rs.getBoolean(ada.getStringInConfig("ban.db.column.def")), BanRequest.BanType.UNKNOW,
 							hasCheatDetect ? rs.getString(ada.getStringInConfig("ban.db.column.cheat_detect")) : "Unknow",
@@ -127,7 +127,7 @@ public class NegativityAccount {
 		brList.addAll(banRequest);
 		for (BanRequest actualBr : brList)
 			if (br.getBy().equals(actualBr.getBy()) && br.getReason().equals(actualBr.getReason())
-					&& br.getFullTime() == actualBr.getFullTime())
+					&& br.getExpirationTime() == actualBr.getExpirationTime())
 				return;
 		banRequest.add(br);
 	}
@@ -154,8 +154,8 @@ public class NegativityAccount {
 		for (BanRequest br : banRequest) {
 			if (br.isDef())
 				return "always";
-			else if ((br.getFullTime()) > l)
-				l = br.getFullTime();
+			else if ((br.getExpirationTime()) > l)
+				l = br.getExpirationTime();
 		}
 		Timestamp time = new Timestamp(l);
 		return time.toString().split("\\.", 2)[0];

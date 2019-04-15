@@ -86,7 +86,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					reason = s;
 				else reason += s;
 			}
-			new BanRequest(np.getAccount(), reason, time, def, BanType.CONSOLE, getFromReason(reason), "admin", false).execute();
+			new BanRequest(np.getAccount().getPlayerId(), reason, System.currentTimeMillis() + time, def, BanType.CONSOLE, getFromReason(reason), "admin", false).execute();
 			Messages.sendMessage(sender, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 			return false;
 		}
@@ -157,7 +157,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				reason = s;
 			else reason += " " + s;
 		}
-		new BanRequest(np.getAccount(), reason, time, def, BanType.MOD, getFromReason(reason), p.getName(), false).execute();
+		new BanRequest(np.getAccount().getPlayerId(), reason, System.currentTimeMillis() + time, def, BanType.MOD, getFromReason(reason), p.getName(), false).execute();
 		if (!sender.equals(cible))
 			Messages.sendMessage(p, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 		return false;
