@@ -60,7 +60,9 @@ import com.elikill58.negativity.universal.Minerate.MinerateType;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.SpongeAdapter;
+import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.Ban;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.google.inject.Inject;
 
@@ -214,13 +216,17 @@ public class SpongeNegativity implements RawDataListener {
 		UUID playerId = e.getTargetUser().getUniqueId();
 		SpongeNegativityPlayer.removeFromCache(playerId, false);
 
-		NegativityAccount userAccount = Adapter.getAdapter().getNegativityAccount(playerId);
-		if (Ban.isBanned(userAccount)) {
-			if (Ban.canConnect(userAccount))
-				return;
+		ActiveBan activeBan = BanManager.getActiveBan(playerId);
+		if (activeBan != null) {
+			String kickMessageKey = "ban.kick_" + (activeBan.isDefinitive() ? "def" : "time");
+			Timestamp expirationTime = new Timestamp(activeBan.getExpirationTime());
+			String formattedExpTime = expirationTime.toString().split("\\.", 2)[0];
+			NegativityAccount userAccount = Adapter.getAdapter().getNegativityAccount(playerId);
 			e.setCancelled(true);
-			e.setMessage(Messages.getMessage(userAccount, "ban.kick_" + (userAccount.isBanDef() ? "def" : "time"), "%reason%",
-					userAccount.getBanReason(), "%time%", (userAccount.getBanTime()), "%by%", userAccount.getBanBy()));
+			e.setMessage(Messages.getMessage(userAccount, kickMessageKey,
+					"%reason%", activeBan.getReason(),
+					"%time%", formattedExpTime,
+					"%by%", activeBan.getBannedBy()));
 		}
 	}
 

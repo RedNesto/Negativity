@@ -6,6 +6,8 @@ import static org.spongepowered.api.command.args.GenericArguments.longNum;
 import static org.spongepowered.api.command.args.GenericArguments.player;
 import static org.spongepowered.api.command.args.GenericArguments.remainingJoinedStrings;
 
+import javax.annotation.Nullable;
+
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -20,8 +22,8 @@ import com.elikill58.negativity.sponge.Messages;
 import com.elikill58.negativity.sponge.SpongeNegativityPlayer;
 import com.elikill58.negativity.sponge.utils.NegativityCmdWrapper;
 import com.elikill58.negativity.universal.Cheat;
-import com.elikill58.negativity.universal.ban.BanRequest;
-import com.elikill58.negativity.universal.ban.BanRequest.BanType;
+import com.elikill58.negativity.universal.ban.BanManager;
+import com.elikill58.negativity.universal.ban.BanType;
 
 public class BanCommand implements CommandExecutor {
 
@@ -39,20 +41,21 @@ public class BanCommand implements CommandExecutor {
 		SpongeNegativityPlayer targetNPlayer = SpongeNegativityPlayer.getNegativityPlayer(targetPlayer);
 		String reason = args.requireOne("reason");
 
-		BanRequest banRequest = new BanRequest(targetNPlayer.getAccount().getPlayerId(), reason, System.currentTimeMillis() + banDuration, isBanDefinitive, src instanceof Player ? BanType.MOD : BanType.CONSOLE, getFromReason(reason), src.getName(), false);
-		banRequest.execute();
-
+		long expirationTime = System.currentTimeMillis() + banDuration;
+		BanType banType = src instanceof Player ? BanType.MOD : BanType.CONSOLE;
+		BanManager.banPlayer(targetNPlayer.getAccount().getPlayerId(), reason, src.getName(), isBanDefinitive, banType, expirationTime, getCheatFromReason(reason));
 		Messages.sendMessage(src, "ban.well_ban", "%name%", targetPlayer.getName(), "%reason%", reason);
 		return CommandResult.success();
 	}
 
-	private String getFromReason(String line) {
+	@Nullable
+	private String getCheatFromReason(String line) {
 		for (String s : line.split(" "))
 			for (Cheat c : Cheat.values())
 				if (c.getName().equalsIgnoreCase(s) || c.getKey().equalsIgnoreCase(s))
 					return c.getName();
 
-		return "mod";
+		return null;
 	}
 
 	public static CommandCallable create() {

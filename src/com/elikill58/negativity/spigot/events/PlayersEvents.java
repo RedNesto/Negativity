@@ -1,5 +1,6 @@
 package com.elikill58.negativity.spigot.events;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -25,14 +25,13 @@ import com.elikill58.negativity.spigot.commands.ReportCommand;
 import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.Minerate.MinerateType;
-import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.SuspectManager;
 import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.ActiveBan;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class PlayersEvents implements Listener {
@@ -42,17 +41,17 @@ public class PlayersEvents implements Listener {
 		UUID playerId = e.getPlayer().getUniqueId();
 		SpigotNegativityPlayer.removeFromCache(playerId, false);
 
-		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
-		if(Ban.isBanned(account)) {
-			if(Ban.canConnect(account))
-				return;
-			boolean isDef = false;
-			for(BanRequest br : account.getBanRequest())
-				if(br.isDef())
-					isDef = true;
-			e.setResult(Result.KICK_BANNED);
-			e.setKickMessage(Messages.getMessage(e.getPlayer(), "ban.kick_" + (isDef ? "def" : "time"), "%reason%", account.getBanReason(), "%time%" , account.getBanTime(), "%by%", account.getBanBy()));
-			Adapter.getAdapter().invalidateAccount(account.getPlayerId());
+		ActiveBan activeBan = BanManager.getActiveBan(playerId);
+		if(activeBan != null) {
+			String kickMessageKey = "ban.kick_" + (activeBan.isDefinitive() ? "def" : "time");
+			Timestamp expirationTime = new Timestamp(activeBan.getExpirationTime());
+			String formattedExpTime = expirationTime.toString().split("\\.", 2)[0];
+			e.setResult(PlayerLoginEvent.Result.KICK_BANNED);
+			e.setKickMessage(Messages.getMessage(e.getPlayer(), kickMessageKey,
+					"%reason%", activeBan.getReason(),
+					"%time%" , formattedExpTime,
+					"%by%", activeBan.getBannedBy()));
+			Adapter.getAdapter().invalidateAccount(playerId);
 		}
 	}
 

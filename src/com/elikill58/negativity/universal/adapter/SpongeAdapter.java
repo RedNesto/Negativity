@@ -344,8 +344,6 @@ public class SpongeAdapter extends Adapter {
 			Path userFilePath = SpongeNegativity.getInstance().getDataFolder().resolve("user").resolve(playerId.toString() + ".yml");
 			ConfigurationNode userData = HoconConfigurationLoader.builder().setPath(userFilePath).build().load();
 			account.setLang(userData.getNode("lang").getString(TranslatedMessages.DEFAULT_LANG));
-
-			account.loadBanRequest();
 			return account;
 		}
 	}

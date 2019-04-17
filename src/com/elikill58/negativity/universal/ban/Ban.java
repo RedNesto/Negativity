@@ -2,41 +2,21 @@ package com.elikill58.negativity.universal.ban;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import com.elikill58.negativity.universal.Cheat;
-import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.ban.BanRequest.BanType;
 
 public class Ban {
 
 	public static File banDir;
 	public static boolean banActive, banActiveIsFile;
 	public static final HashMap<String, String> DB_CONTENT = new HashMap<>();
-
-	public static boolean isBanned(NegativityAccount np) {
-		if(!banActive)
-			return false;
-		try {
-			np.loadBanRequest(true);
-			if (np.getBanRequest().size() == 0)
-				return false;
-			boolean isBanned = false;
-			long time = System.currentTimeMillis();
-			for (BanRequest br : np.getBanRequest())
-				if (((br.getExpirationTime()) > time || br.isDef()) && !br.isUnban())
-					isBanned = true;
-			return isBanned;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
 
 	public static void manageBan(Cheat cheat, NegativityPlayer np, int relia) {
 		Adapter ada = Adapter.getAdapter();
@@ -56,9 +36,10 @@ public class Ban {
 		} catch (ScriptException e) {
 			e.printStackTrace();
 		}
-		new BanRequest(np.getAccount().getPlayerId(), "Cheat (" + cheat.getName() + ")", i + System.currentTimeMillis(),
-				np.getAccount().getBanRequest().size() >= ada.getIntegerInConfig("ban.def.ban_time"), BanType.PLUGIN,
-				cheat.getName(), "Negativity", false).execute();
+
+		List<LoggedBan> loggedBans = BanManager.getLoggedBans(np.getAccount().getPlayerId());
+		boolean isDefinitive = loggedBans.size() >= ada.getIntegerInConfig("ban.def.ban_time");
+		BanManager.banPlayer(np.getAccount().getPlayerId(), "Cheat (" + cheat.getName() + ")", "Negativity", isDefinitive, BanType.PLUGIN, i + System.currentTimeMillis(), cheat.getName());
 	}
 
 	public static void init() {
@@ -84,14 +65,5 @@ public class Ban {
 			if (!banDir.exists())
 				banDir.mkdirs();
 		DB_CONTENT.putAll(adapter.getKeysListInConfig("ban.db.other"));
-	}
-
-	public static boolean canConnect(NegativityAccount np) {
-		if(!banActive)
-			return true;
-		for (BanRequest br : np.getBanRequest())
-			if ((br.isDef() || (br.getExpirationTime()) > System.currentTimeMillis()) && !br.isUnban())
-				return false;
-		return true;
 	}
 }

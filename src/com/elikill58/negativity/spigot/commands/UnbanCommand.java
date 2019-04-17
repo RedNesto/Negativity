@@ -14,8 +14,8 @@ import org.bukkit.entity.Player;
 import com.elikill58.negativity.spigot.Messages;
 import com.elikill58.negativity.spigot.SpigotNegativityPlayer;
 import com.elikill58.negativity.spigot.utils.Utils;
-import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.BanManager;
+import com.elikill58.negativity.universal.ban.LoggedBan;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class UnbanCommand implements CommandExecutor, TabCompleter {
@@ -23,67 +23,39 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] arg) {
-		if(!(sender instanceof Player)) {
-			if(arg.length == 0) {
-				Messages.sendMessageList(sender, "unban.help");
+		if (sender instanceof Player) {
+			Player p = (Player) sender;
+			if (!Perm.hasPerm(SpigotNegativityPlayer.getNegativityPlayer(p), "ban")) {
+				Messages.sendMessage(p, "not_permission");
 				return false;
 			}
-			OfflinePlayer cible = Bukkit.getOfflinePlayer(arg[0]);
-			if (cible == null) {
-				for(OfflinePlayer offline : Bukkit.getOfflinePlayers())
-					if(arg[0].equalsIgnoreCase(offline.getName()))
-						cible = offline;
-			}
-			if (cible == null) {
-				Messages.sendMessage(sender, "invalid_player", "%arg%", arg[0]);
-				return false;
-			}
-			SpigotNegativityPlayer npCible = SpigotNegativityPlayer.getNegativityPlayer(cible);
-			List<BanRequest> brList =  npCible.getAccount().getBanRequest();
-			if(brList.size() == 0) {
-				if(cible.isOnline() || Ban.canConnect(npCible.getAccount()))
-					Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
-				else
-					Messages.sendMessage(sender, "unban.not_exact", "%arg%", arg[0]);
-				return false;
-			} else
-				for(BanRequest br : brList)
-					br.unban();
-			Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
-			return true;
 		}
-		Player p = (Player) sender;
-		if(!Perm.hasPerm(SpigotNegativityPlayer.getNegativityPlayer(p), "ban")) {
-			Messages.sendMessage(p, "not_permission");
+
+		if (arg.length == 0) {
+			Messages.sendMessageList(sender, "unban.help");
 			return false;
 		}
-		if(arg.length == 0) {
-			Messages.sendMessageList(p, "unban.help");
-			return false;
-		}
+
 		OfflinePlayer cible = Bukkit.getOfflinePlayer(arg[0]);
 		if (cible == null) {
 			for(OfflinePlayer offline : Bukkit.getOfflinePlayers())
 				if(arg[0].equalsIgnoreCase(offline.getName()))
 					cible = offline;
 		}
+
 		if (cible == null) {
-			Messages.sendMessage(p, "invalid_player", "%arg%", arg[0]);
+			Messages.sendMessage(sender, "invalid_player", "%arg%", arg[0]);
 			return false;
 		}
-		SpigotNegativityPlayer npCible = SpigotNegativityPlayer.getNegativityPlayer(cible);
-		List<BanRequest> brList =  npCible.getAccount().getBanRequest();
-		if(brList.size() == 0) {
-			if(cible.isOnline() || Ban.canConnect(npCible.getAccount()))
-				Messages.sendMessage(p, "unban.not_banned", "%name%", cible.getName());
-			else
-				Messages.sendMessage(p, "unban.not_exact", "%arg%", arg[0]);
+
+		LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId());
+		if (revokedBan == null) {
+			Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
 			return false;
-		} else
-			for(BanRequest br : brList)
-				br.unban();
-		Messages.sendMessage(p, "unban.well_unban", "%name%", cible.getName());
-		return false;
+		}
+
+		Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
+		return true;
 	}
 
 	@Override

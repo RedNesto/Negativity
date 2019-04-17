@@ -11,13 +11,14 @@ import java.util.UUID;
 import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.BanType;
+import com.elikill58.negativity.universal.ban.LoggedBan;
 
-public class FileBanStorage implements BanStorage {
+public class FileLoggedBanStorage implements LoggedBanStorage {
 
 	@Override
-	public List<BanRequest> load(UUID playerId) {
-		List<BanRequest> loadedBans = new ArrayList<>();
+	public List<LoggedBan> load(UUID playerId) {
+		List<LoggedBan> loadedBans = new ArrayList<>();
 
 		File banFile = new File(Ban.banDir.getAbsolutePath(), playerId + ".txt");
 		if (!banFile.exists())
@@ -34,28 +35,33 @@ public class FileBanStorage implements BanStorage {
 	}
 
 	@Override
-	public void save(BanRequest ban) {
+	public void save(LoggedBan ban) {
 		try {
-			File f = new File(Ban.banDir, ban.getUUID() + ".txt");
+			File f = new File(Ban.banDir, ban.getPlayerId() + ".txt");
 			if (!f.exists())
 				f.createNewFile();
 			Files.write(f.toPath(),
-					(ban.getExpirationTime() + ":reason=" + ban.getReason().replaceAll(":", "") + ":def=" + ban.isDef() + ":bantype="
-							+ ban.getBanType().name() + ":ac=" + ban.getCheatName() + ":by=" + ban.getBy() + ":unban=" + ban.isUnban() + "\n").getBytes(),
+					(ban.getExpirationTime()
+							+ ":reason=" + ban.getReason().replaceAll(":", "")
+							+ ":def=" + ban.isDefinitive()
+							+ ":bantype=" + ban.getBanType().name()
+							+ (ban.getCheatName() != null ? ":ac=" + ban.getCheatName() : "")
+							+ ":by=" + ban.getBannedBy()
+							+ ":unban=" + ban.isRevoked() + "\n").getBytes(),
 					StandardOpenOption.APPEND);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static BanRequest fromString(UUID playerId, String line) {
+	public static LoggedBan fromString(UUID playerId, String line) {
 		String reason = "";
 		String by = "Negativity";
 		boolean def = false;
 		boolean isUnban = false;
-		BanRequest.BanType banType = BanRequest.BanType.UNKNOW;
+		BanType banType = BanType.UNKNOW;
 		long expirationTime;
-		String ac = "unknown";
+		String ac = null;
 		String[] content = line.split(":");
 		expirationTime = Long.valueOf(content[0]);
 		for (String s : content) {
@@ -65,7 +71,7 @@ public class FileBanStorage implements BanStorage {
 			String type = part[0], value = part[1];
 			switch (type) {
 				case "bantype":
-					banType = BanRequest.BanType.valueOf(value.toUpperCase());
+					banType = BanType.valueOf(value.toUpperCase());
 					break;
 				case "def":
 					def = Boolean.valueOf(value);
@@ -88,6 +94,6 @@ public class FileBanStorage implements BanStorage {
 			}
 		}
 
-		return new BanRequest(playerId, reason, expirationTime, def, banType, ac, by, isUnban);
+		return new LoggedBan(playerId, reason, by, def, banType, expirationTime, ac, isUnban);
 	}
 }

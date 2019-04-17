@@ -184,7 +184,7 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 			SpongeNegativity.getInstance().getLogger().error("Unable to save data of player " + p.getName(), e);
 		}
 	}
-	
+
 	public void updateMinerateInFile() {
 		saveData();
 	}
@@ -465,7 +465,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 		SpongeNegativityPlayer nPlayer = PLAYERS_CACHE.remove(playerId);
 		if (nPlayer != null) {
 			nPlayer.destroy(isBan);
-			Adapter.getAdapter().getNegativityAccount(playerId).loadBanRequest(true);
 		}
 	}
 }

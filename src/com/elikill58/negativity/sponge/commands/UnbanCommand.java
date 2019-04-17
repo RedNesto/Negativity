@@ -3,10 +3,7 @@ package com.elikill58.negativity.sponge.commands;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.user;
 
-import java.util.List;
-
 import org.spongepowered.api.command.CommandCallable;
-import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -17,24 +14,21 @@ import org.spongepowered.api.text.Text;
 
 import com.elikill58.negativity.sponge.Messages;
 import com.elikill58.negativity.sponge.utils.NegativityCmdWrapper;
-import com.elikill58.negativity.universal.NegativityAccount;
-import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.BanManager;
 
 public class UnbanCommand implements CommandExecutor {
 
 	@Override
-	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+	public CommandResult execute(CommandSource src, CommandContext args) {
 		User target = args.requireOne("target");
 
-		NegativityAccount targetAccount = Adapter.getAdapter().getNegativityAccount(target.getUniqueId());
-		List<BanRequest> banRequests = targetAccount.getBanRequest();
-		for (BanRequest banRequest : banRequests) {
-			banRequest.unban();
+		if (BanManager.revokeBan(target.getUniqueId()) == null) {
+			Messages.sendMessage(src, "unban.not_banned", "%name%", target.getName());
+			return CommandResult.empty();
+		} else {
+			Messages.sendMessage(src, "unban.well_unban", "%name%", target.getName());
+			return CommandResult.success();
 		}
-
-		Messages.sendMessage(src, "unban.well_unban", "%name%", target.getName());
-		return CommandResult.successCount(banRequests.size());
 	}
 
 	public static CommandCallable create() {
