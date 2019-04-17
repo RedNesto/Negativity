@@ -84,10 +84,7 @@ public class BanManager {
 			return null;
 
 		final long now = System.currentTimeMillis();
-		System.out.println(now);
-		System.out.println("--");
 		for (LoggedBan loggedBan : loggedBans) {
-			System.out.println(loggedBan.getExpirationTime());
 			if (!loggedBan.isRevoked() && (loggedBan.isDefinitive() || loggedBan.getExpirationTime() > now)) {
 				return loggedBan;
 			}

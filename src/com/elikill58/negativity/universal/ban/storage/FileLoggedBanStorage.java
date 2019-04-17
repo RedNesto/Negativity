@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.Ban;
@@ -25,8 +27,11 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 			return loadedBans;
 
 		try {
-			for (String line : Files.readAllLines(banFile.toPath(), UniversalUtils.getOs().getCharset()))
-				loadedBans.add(fromString(playerId, line));
+			for (String line : Files.readAllLines(banFile.toPath(), UniversalUtils.getOs().getCharset())) {
+				LoggedBan ban = fromString(playerId, line);
+				if (ban != null)
+					loadedBans.add(ban);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -54,16 +59,26 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 		}
 	}
 
-	public static LoggedBan fromString(UUID playerId, String line) {
+	@Nullable
+	private static LoggedBan fromString(UUID playerId, String line) {
+		String[] content = line.split(":");
+		if (content.length == 1)
+			return null;
+
+		long expirationTime;
+		try {
+			expirationTime = Long.valueOf(content[0]);
+		} catch (NumberFormatException e) {
+			// This line is invalid
+			return null;
+		}
+
 		String reason = "";
 		String by = "Negativity";
 		boolean def = false;
 		boolean isUnban = false;
 		BanType banType = BanType.UNKNOW;
-		long expirationTime;
 		String ac = null;
-		String[] content = line.split(":");
-		expirationTime = Long.valueOf(content[0]);
 		for (String s : content) {
 			String[] part = s.split("=", 2);
 			if (part.length != 2)
