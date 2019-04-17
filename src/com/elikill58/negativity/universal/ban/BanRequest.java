@@ -46,49 +46,6 @@ public class BanRequest {
 		}
 	}
 
-	public static BanRequest fromString(UUID playerId, String line) {
-		String reason = "";
-		String by = "Negativity";
-		boolean def = false;
-		boolean isUnban = false;
-		BanType banType = BanType.UNKNOW;
-		long expirationTime;
-		String ac = "unknown";
-		String[] content = line.split(":");
-		expirationTime = Long.valueOf(content[0]);
-		for (String s : content) {
-			String[] part = s.split("=", 2);
-			if (part.length != 2)
-				continue;
-			String type = part[0], value = part[1];
-			switch (type) {
-				case "bantype":
-					banType = BanType.valueOf(value.toUpperCase());
-					break;
-				case "def":
-					def = Boolean.valueOf(value);
-					break;
-				case "reason":
-					reason = value;
-					break;
-				case "ac":
-					ac = value;
-					break;
-				case "by":
-					by = value;
-					break;
-				case "unban":
-					isUnban = Boolean.valueOf(value);
-					break;
-				default:
-					Adapter.getAdapter().warn("Type " + type + " unknow. Value: " + value);
-					break;
-			}
-		}
-
-		return new BanRequest(playerId, reason, expirationTime, def, banType, ac, by, isUnban);
-	}
-
 	public UUID getUUID() {
 		return uuid;
 	}
