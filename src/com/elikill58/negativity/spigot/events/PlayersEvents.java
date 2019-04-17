@@ -1,5 +1,6 @@
 package com.elikill58.negativity.spigot.events;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -27,27 +27,27 @@ import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.SuspectManager;
 import com.elikill58.negativity.universal.UniversalUtils;
-import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.ActiveBan;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class PlayersEvents implements Listener {
-	
+
 	@EventHandler
 	public void onLogin(PlayerLoginEvent e) {
-		SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(e.getPlayer());
-		if(Ban.isBanned(np)) {
-			if(Ban.canConnect(np))
-				return;
-			boolean isDef = false;
-			for(BanRequest br : np.getBanRequest())
-				if(br.isDef())
-					isDef = true;
-			e.setResult(Result.KICK_BANNED);
-			e.setKickMessage(Messages.getMessage(e.getPlayer(), "ban.kick_" + (isDef ? "def" : "time"), "%reason%", np.getBanReason(), "%time%" , np.getBanTime(), "%by%", np.getBanBy()));
+		ActiveBan activeBan = BanManager.getActiveBan(e.getPlayer().getUniqueId());
+		if(activeBan != null) {
+			String kickMessageKey = "ban.kick_" + (activeBan.isDefinitive() ? "def" : "time");
+			Timestamp expirationTime = new Timestamp(activeBan.getExpirationTime());
+			String formattedExpTime = expirationTime.toString().split("\\.", 2)[0];
+			e.setResult(PlayerLoginEvent.Result.KICK_BANNED);
+			e.setKickMessage(Messages.getMessage(e.getPlayer(), kickMessageKey,
+					"%reason%", activeBan.getReason(),
+					"%time%" , formattedExpTime,
+					"%by%", activeBan.getBannedBy()));
 		}
 	}
-	
+
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
@@ -75,7 +75,7 @@ public class PlayersEvents implements Listener {
 			return;
 		SpigotNegativityPlayer.getNegativityPlayer(p).destroy(false);
 	}
-	
+
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e){
 		Player p = e.getPlayer();
@@ -108,7 +108,7 @@ public class PlayersEvents implements Listener {
 		for(Player suspect : suspected)
 			SuspectManager.analyzeText(SpigotNegativityPlayer.getNegativityPlayer(suspect), cheats);
 	}
-	
+
 	@EventHandler
 	public void onBlockBreakEvent(BlockBreakEvent e) {
 		SpigotNegativityPlayer.getNegativityPlayer(e.getPlayer()).mineRate.addMine(MinerateType.getMinerateType(e.getBlock().getType().name()));

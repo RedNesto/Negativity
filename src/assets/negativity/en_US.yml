@@ -23,6 +23,7 @@ lang {
 }
 unban {
   well_unban: "&a[&2Negativity&a]&c %name% well unbanned."
+  not_banned: "&c%name% isn't banned."
   help = [
     "/unban <player> : Unban specified player" ]
 }

@@ -88,7 +88,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		this.uuid = p.getUniqueId();
 		this.mineRate = new Minerate();
 		players.put(p.getUniqueId(), this);
-		loadBanRequest();
 		File directory = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath() + File.separator + "user"
 				+ File.separator + "proof" + File.separator);
 		directory.mkdirs();
@@ -111,7 +110,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		this.uuid = op.getUniqueId();
 		this.mineRate = new Minerate();
 		players.put(this.uuid, this);
-		loadBanRequest();
 		File tempfile = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath() + File.separator + "user"
 				+ File.separator + uuid + ".txt");
 		File directory = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath() + File.separator + "user"
@@ -288,7 +286,7 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		FakePlayer fp = new FakePlayer(loc, getRandomFakePlayerName()).show(getPlayer());
 		FAKE_PLAYER.add(fp);
 	}
-	
+
 	private String getRandomFakePlayerName() {
 		List<Player> online = Utils.getOnlinePlayers();
 		if(online.size() <= 1) {
@@ -296,7 +294,7 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		} else
 			return online.get(new Random().nextInt(online.size())).getName();
 	}
-	
+
 	public void removeFakePlayer(FakePlayer fp) {
 		if(!FAKE_PLAYER.contains(fp))
 			return;

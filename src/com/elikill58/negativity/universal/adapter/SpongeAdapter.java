@@ -328,7 +328,7 @@ public class SpongeAdapter extends Adapter {
 	public void invalidateAccount(UUID playerId) {
 		accountCache.invalidate(playerId);
 	}
-	
+
 	private static class NegativityAccountLoader extends CacheLoader<UUID, NegativityAccount> {
 
 		@Override
@@ -338,8 +338,6 @@ public class SpongeAdapter extends Adapter {
 			Path userFilePath = SpongeNegativity.getInstance().getDataFolder().resolve("user").resolve(playerId.toString() + ".yml");
 			ConfigurationNode userData = HoconConfigurationLoader.builder().setPath(userFilePath).build().load();
 			account.setLang(userData.getNode("lang").getString(TranslatedMessages.DEFAULT_LANG));
-
-			account.loadBanRequest();
 			return account;
 		}
 	}

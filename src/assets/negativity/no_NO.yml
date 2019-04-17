@@ -19,6 +19,7 @@ lang {
 }
 unban {
   well_unban: "&a[&2Negativity&a]&c %name% godt unforbudt."
+  not_banned: "&c%name% er ikke forbudt."
   help = [
     "/unban <player> : unforbudt den angitte spilleren" ]
 }

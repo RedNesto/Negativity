@@ -38,6 +38,7 @@ import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.SpigotAdapter;
 import com.elikill58.negativity.universal.ban.Ban;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 @SuppressWarnings("deprecation")
@@ -141,7 +142,7 @@ public class SpigotNegativity extends JavaPlugin {
 		(invTimer = new ActualizeInvTimer()).runTaskTimerAsynchronously(this, 5, 5);
 		(packetTimer = new TimerAnalyzePacket()).runTaskTimer(this, 20, 20);
 		(runSpawnFakePlayer = new TimerSpawnFakePlayer()).runTaskTimer(this, 20, 20 * 60 * 20);
-		
+
 		for(Cheat c : Cheat.values()) {
 			if(c.isActive()) {
 				if(c.hasListener()) {
@@ -150,7 +151,7 @@ public class SpigotNegativity extends JavaPlugin {
 				c.run();
 			}
 		}
-		
+
 		loadCommand();
 
 		if (getConfig().get("items") != null) {
@@ -172,11 +173,11 @@ public class SpigotNegativity extends JavaPlugin {
 			}
 		});
 		ada.loadLang();
-		
+
 	    if (Bukkit.getPluginManager().getPlugin("Essentials") != null)
 	    	essentialsSupport = true;
 	}
-	
+
 	private void loadCommand() {
 		PluginCommand negativity = getCommand("negativity");
 		NegativityCommand negativityCmd = new NegativityCommand();
@@ -190,7 +191,7 @@ public class SpigotNegativity extends JavaPlugin {
 			reportCmd.setExecutor(new ReportCommand());
 			reportCmd.setTabCompleter(new ReportCommand());
 		}
-		
+
 		PluginCommand banCmd = getCommand("nban");
 		if (!getConfig().getBoolean("ban_command"))
 			unRegisterBukkitCommand(banCmd);
@@ -212,7 +213,7 @@ public class SpigotNegativity extends JavaPlugin {
 			unbanCmd.setExecutor(new UnbanCommand());
 			unbanCmd.setTabCompleter(new UnbanCommand());
 		}
-		
+
 		PluginCommand langCmd = getCommand("lang");
 		if (!TranslatedMessages.activeTranslation)
 			unRegisterBukkitCommand(langCmd);
@@ -226,7 +227,7 @@ public class SpigotNegativity extends JavaPlugin {
 			suspectCmd.setExecutor(new SuspectCommand());
 			suspectCmd.setTabCompleter(new SuspectCommand());
 		}
-		
+
 		getCommand("mod").setExecutor(new ModCommand());
 	}
 
@@ -291,7 +292,7 @@ public class SpigotNegativity extends JavaPlugin {
 		}
 		Stats.updateStats(StatsType.CHEATS, p.getName() + ": " + c.getKey() + " (Reliability: " + reliability + ") Ping: "
 				+ ping + " Type: " + type.getName());
-		if(Ban.isBanned(np))
+		if(BanManager.getActiveBan(np.getPlayerId()) != null)
 			return false;
 		Ban.manageBan(c, np, reliability);
 		if (isOnBungeecord)

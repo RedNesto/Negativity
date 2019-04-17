@@ -5,13 +5,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
-import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.ActiveBan;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 import net.md_5.bungee.api.ChatColor;
@@ -97,20 +98,23 @@ public class NegativityListener implements Listener {
 	@EventHandler
 	public void onPostLogin(PostLoginEvent e) {
 		ProxiedPlayer p = e.getPlayer();
-		BungeeNegativityPlayer np = BungeeNegativityPlayer.getNegativityPlayer(p);
-		if(Ban.isBanned(np)) {
-			if(Ban.canConnect(np))
-				return;
-			boolean isDef = false;
-			for(BanRequest br : np.getBanRequest())
-				if(br.isDef())
-					isDef = true;
-			p.disconnect(new ComponentBuilder(BungeeMessages.getMessage(e.getPlayer(), "ban.kick_" + (isDef ? "def" : "time"), "%reason%", np.getBanReason(), "%time%" , np.getBanTime(), "%by%", np.getBanBy())).create());
+		ActiveBan activeBan = BanManager.getActiveBan(p.getUniqueId());
+		if (activeBan != null) {
+			String kickMessageKey = "ban.kick_" + (activeBan.isDefinitive() ? "def" : "time");
+			Timestamp expirationTime = new Timestamp(activeBan.getExpirationTime());
+			String formattedExpTime = expirationTime.toString().split("\\.", 2)[0];
+			p.disconnect(new ComponentBuilder(BungeeMessages.getMessage(e.getPlayer(), kickMessageKey,
+					"%reason%", activeBan.getReason(),
+					"%time%", formattedExpTime,
+					"%by%", activeBan.getBannedBy())).create());
 			return;
 		}
+
 		Stats.updateStats(StatsType.PLAYERS, ProxyServer.getInstance().getPlayers().size());
 		if (sendBungeecordInfo)
 			return;
+
+		BungeeNegativityPlayer np = BungeeNegativityPlayer.getNegativityPlayer(p);
 		if (Perm.hasPerm(np, "showAlert"))
 			for (Report msg : report) {
 				p.sendMessage(msg.toMessage(p));
@@ -127,7 +131,7 @@ public class NegativityListener implements Listener {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	@EventHandler
 	public void onDisconnect(PlayerDisconnectEvent e) {
 		Stats.updateStats(StatsType.PLAYERS, ProxyServer.getInstance().getPlayers().size());
