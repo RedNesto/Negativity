@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,15 +29,11 @@ public class BanManager {
 	private static final LoggedBanStorage DB_STORAGE = new DatabaseLoggedBanStorage();
 
 	public static List<LoggedBan> getLoggedBans(UUID playerId) {
-		if (Ban.banFileActive) {
+		if (Ban.banActiveIsFile) {
 			return FILE_STORAGE.load(playerId);
-		}
-
-		if (Ban.banDbActive) {
+		} else {
 			return DB_STORAGE.load(playerId);
 		}
-
-		return new ArrayList<>();
 	}
 
 	private static void saveLoggedBans(Collection<LoggedBan> bans) {
@@ -55,11 +50,9 @@ public class BanManager {
 	}
 
 	private static void saveLoggedBan(LoggedBan ban) {
-		if (Ban.banFileActive) {
+		if (Ban.banActiveIsFile) {
 			FILE_STORAGE.save(ban);
-		}
-
-		if (Ban.banDbActive) {
+		} else {
 			DB_STORAGE.save(ban);
 		}
 	}
@@ -149,19 +142,18 @@ public class BanManager {
 		try {
 			Adapter ada = Adapter.getAdapter();
 			if (ada.getBooleanInConfig("ban.destroy_when_unban")) {
-				if (Ban.banFileActive) {
+				if (Ban.banActiveIsFile) {
 					File f = new File(Ban.banDir, playerId + ".txt");
 					if (f.exists() && !f.delete())
 						Files.write(f.toPath(), Collections.emptyList());
-				}
-				if (Ban.banDbActive) {
+				} else {
 					PreparedStatement stm = Database.getConnection()
 							.prepareStatement("DELETE FROM " + Database.table_ban + " WHERE uuid = ?");
 					stm.setString(1, playerId.toString());
 					stm.execute();
 				}
 			} else {
-				if (Ban.banFileActive) {
+				if (Ban.banActiveIsFile) {
 					// TODO We need to replace the active LoggedBan by the revoked one since LoggedBan is immutable,
 					//  but we have to set LoggedBan#isRevoked to true.
 					//  This will no longer be needed once we separate logged and active bans storage.
@@ -169,8 +161,7 @@ public class BanManager {
 					loggedBans.add(revokedLoggedBan);
 
 					saveLoggedBans(loggedBans);
-				}
-				if (Ban.banDbActive) {
+				} else {
 					String uc = ada.getStringInConfig("ban.db.column.uuid");
 					PreparedStatement stm = Database.getConnection().prepareStatement("UPDATE " + Database.table_ban
 							+ " SET " + ada.getStringInConfig("ban.db.column.time") + " = ? WHERE " + uc + " = ?");
