@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,13 +30,9 @@ public class BanManager {
 	public static List<LoggedBan> getLoggedBans(UUID playerId) {
 		if (Ban.banActiveIsFile) {
 			return FILE_STORAGE.load(playerId);
-		}
-
-		if (!Ban.banActiveIsFile) {
+		} else {
 			return DB_STORAGE.load(playerId);
 		}
-
-		return new ArrayList<>();
 	}
 
 	private static void saveLoggedBans(Collection<LoggedBan> bans) {
@@ -56,9 +51,7 @@ public class BanManager {
 	private static void saveLoggedBan(LoggedBan ban) {
 		if (Ban.banActiveIsFile) {
 			FILE_STORAGE.save(ban);
-		}
-
-		if (!Ban.banActiveIsFile) {
+		} else {
 			DB_STORAGE.save(ban);
 		}
 	}
@@ -151,8 +144,7 @@ public class BanManager {
 					File f = new File(Ban.banDir, playerId + ".txt");
 					if (f.exists() && !f.delete())
 						Files.write(f.toPath(), Collections.emptyList());
-				}
-				if (!Ban.banActiveIsFile) {
+				} else {
 					PreparedStatement stm = Database.getConnection()
 							.prepareStatement("DELETE FROM " + Database.table_ban + " WHERE uuid = ?");
 					stm.setString(1, playerId.toString());
@@ -167,8 +159,7 @@ public class BanManager {
 					loggedBans.add(revokedLoggedBan);
 
 					saveLoggedBans(loggedBans);
-				}
-				if (!Ban.banActiveIsFile) {
+				} else {
 					String uc = ada.getStringInConfig("ban.db.column.uuid");
 					PreparedStatement stm = Database.getConnection().prepareStatement("UPDATE " + Database.table_ban
 							+ " SET " + ada.getStringInConfig("ban.db.column.time") + " = ? WHERE " + uc + " = ?");
