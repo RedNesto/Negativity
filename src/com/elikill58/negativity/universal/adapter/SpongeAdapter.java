@@ -81,7 +81,7 @@ public class SpongeAdapter extends Adapter {
 		}
 	}
 
-	private ConfigurationNode getFinalNode(String dir) throws Exception {
+	private ConfigurationNode getFinalNode(String dir) {
 		ConfigurationNode node = config;
 		String[] parts = dir.split("\\.");
 		for (String s : parts)
@@ -89,7 +89,7 @@ public class SpongeAdapter extends Adapter {
 		return node;
 	}
 
-	private ConfigurationNode getFinalNode(String dir, ConfigurationNode localConf) throws Exception {
+	private ConfigurationNode getFinalNode(String dir, ConfigurationNode localConf) {
 		ConfigurationNode node = localConf;
 		String[] parts = dir.split("\\.");
 		for (String s : parts)
@@ -183,6 +183,11 @@ public class SpongeAdapter extends Adapter {
 		}
 
 		return null;
+	}
+
+	@Override
+	public boolean containsConfigValue(String dir) {
+		return !getFinalNode(dir).isVirtual();
 	}
 
 	@Override

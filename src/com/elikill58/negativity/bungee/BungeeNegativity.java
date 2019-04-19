@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 
 import com.elikill58.negativity.universal.Database;
+import com.elikill58.negativity.universal.NegativityConfigMigration;
 import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.UniversalUtils;
@@ -29,7 +30,9 @@ public class BungeeNegativity extends Plugin {
 		enableConfig();
 		getProxy().registerChannel("custom:negativity");
 		getProxy().getPluginManager().registerListener(this, new NegativityListener());
-		Adapter.setAdapter(new BungeeAdapter(this, CONFIG));
+		BungeeAdapter adapter = new BungeeAdapter(this, CONFIG);
+		NegativityConfigMigration.migrateConfig(adapter);
+		Adapter.setAdapter(adapter);
 		UniversalUtils.init();
 		BungeeMessages.load(this);
 		Stats.loadStats();

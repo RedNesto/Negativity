@@ -15,7 +15,8 @@ import com.elikill58.negativity.universal.adapter.Adapter;
 public class Ban {
 
 	public static File banDir;
-	public static boolean banActive, banActiveIsFile;
+	public static File banLogsDir;
+	public static boolean banActive;
 	public static final HashMap<String, String> DB_CONTENT = new HashMap<>();
 
 	public static void manageBan(Cheat cheat, NegativityPlayer np, int relia) {
@@ -45,6 +46,7 @@ public class Ban {
 	public static void init() {
 		Adapter adapter = Adapter.getAdapter();
 		banDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.dir"));
+		banLogsDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.logs_dir"));
 		if(!(banActive = adapter.getBooleanInConfig("ban.active")))
 			return;
 		String storage = adapter.getStringInConfig("ban.storage");
@@ -52,18 +54,18 @@ public class Ban {
 			adapter.log("Some line is missing in the configuration file. Please, remove it then restart your server to get all configuration line.");
 			return;
 		}
-		if(storage.equalsIgnoreCase("file")) {
-			banActiveIsFile = true;
-		} else if(storage.equalsIgnoreCase("db") || storage.equalsIgnoreCase("database")) {
-			banActiveIsFile = false;
-		} else {
-			adapter.error("Error while loading ban system. " + storage + " is an undefined storage type.");
-			adapter.error("Please, write a good storage type in the configuration, then restart you server.");
+
+		if (storage.equalsIgnoreCase("db"))
+			storage = "database";
+
+		if (!BanManager.getStorages().containsKey(storage)) {
+			adapter.error("Error while loading ban system. '" + storage + "' is an unknown storage type.");
+			adapter.error("Please set a valid storage type, then restart you server.");
 			return;
 		}
-		if (banActiveIsFile)
-			if (!banDir.exists())
-				banDir.mkdirs();
+
+		BanManager.setBanStorage(storage);
+
 		DB_CONTENT.putAll(adapter.getKeysListInConfig("ban.db.other"));
 	}
 }

@@ -40,6 +40,7 @@ public abstract class Adapter {
 	public abstract List<String> getStringListInConfig(String dir);
 	public abstract HashMap<String, String> getKeysListInConfig(String dir);
 	public abstract String getStringInOtherConfig(String fileDir, String valueDir, String fileName);
+	public abstract boolean containsConfigValue(String dir);
 	public abstract File copy(String lang, File f);
 	public abstract void log(String msg);
 	public abstract void warn(String msg);

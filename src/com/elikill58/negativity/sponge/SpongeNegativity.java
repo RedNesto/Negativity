@@ -60,6 +60,7 @@ import com.elikill58.negativity.universal.ItemUseBypass;
 import com.elikill58.negativity.universal.ItemUseBypass.WhenBypass;
 import com.elikill58.negativity.universal.Minerate.MinerateType;
 import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.NegativityConfigMigration;
 import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.SuspectManager;
@@ -104,7 +105,9 @@ public class SpongeNegativity implements RawDataListener {
 		INSTANCE = this;
 
 		loadConfig();
-		Adapter.setAdapter(new SpongeAdapter(this));
+		SpongeAdapter adapter = new SpongeAdapter(this);
+		NegativityConfigMigration.migrateConfig(adapter);
+		Adapter.setAdapter(adapter);
 		UniversalUtils.init();
 		Cheat.loadCheat();
 		EventManager eventManager = Sponge.getEventManager();
@@ -143,7 +146,7 @@ public class SpongeNegativity implements RawDataListener {
 					}
 				}
 			}).submit(this);
-		Adapter.getAdapter().loadLang();
+		adapter.loadLang();
 	}
 
 	@Listener
