@@ -121,6 +121,11 @@ public class BungeeAdapter extends Adapter {
 	}
 
 	@Override
+	public boolean containsConfigValue(String dir) {
+		return config.contains(dir);
+	}
+
+	@Override
 	public File copy(String lang, File f) {
 		if (f.exists())
 			return f;

@@ -136,6 +136,11 @@ public class SpigotAdapter extends Adapter {
 	}
 
 	@Override
+	public boolean containsConfigValue(String dir) {
+		return config.contains(dir, true);
+	}
+
+	@Override
 	public File copy(String lang, File f) {
 		if (f.exists())
 			return f;

@@ -1,14 +1,13 @@
 package com.elikill58.negativity.universal.ban;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,15 +23,17 @@ import com.elikill58.negativity.universal.permissions.Perm;
 
 public class BanManager {
 
-	private static final LoggedBanStorage FILE_STORAGE = new FileLoggedBanStorage();
-	private static final LoggedBanStorage DB_STORAGE = new DatabaseLoggedBanStorage();
+	private static final Map<String, LoggedBanStorage> STORAGES = new HashMap<>();
+
+	static {
+		STORAGES.put("file", new FileLoggedBanStorage());
+		STORAGES.put("database", new DatabaseLoggedBanStorage());
+	}
+
+	private static String banStorage = "file";
 
 	public static List<LoggedBan> getLoggedBans(UUID playerId) {
-		if (Ban.banActiveIsFile) {
-			return FILE_STORAGE.load(playerId);
-		} else {
-			return DB_STORAGE.load(playerId);
-		}
+		return STORAGES.get(banStorage).load(playerId);
 	}
 
 	private static void saveLoggedBans(Collection<LoggedBan> bans) {
@@ -49,11 +50,7 @@ public class BanManager {
 	}
 
 	private static void saveLoggedBan(LoggedBan ban) {
-		if (Ban.banActiveIsFile) {
-			FILE_STORAGE.save(ban);
-		} else {
-			DB_STORAGE.save(ban);
-		}
+		STORAGES.get(banStorage).save(ban);
 	}
 
 	@Nullable
@@ -139,19 +136,8 @@ public class BanManager {
 
 		try {
 			Adapter ada = Adapter.getAdapter();
-			if (ada.getBooleanInConfig("ban.destroy_when_unban")) {
-				if (Ban.banActiveIsFile) {
-					File f = new File(Ban.banDir, playerId + ".txt");
-					if (f.exists() && !f.delete())
-						Files.write(f.toPath(), Collections.emptyList());
-				} else {
-					PreparedStatement stm = Database.getConnection()
-							.prepareStatement("DELETE FROM " + Database.table_ban + " WHERE uuid = ?");
-					stm.setString(1, playerId.toString());
-					stm.execute();
-				}
-			} else {
-				if (Ban.banActiveIsFile) {
+			if (ada.getBooleanInConfig("ban.log_bans")) {
+				if (banStorage.equals("file")) {
 					// TODO We need to replace the active LoggedBan by the revoked one since LoggedBan is immutable,
 					//  but we have to set LoggedBan#isRevoked to true.
 					//  This will no longer be needed once we separate logged and active bans storage.
@@ -173,12 +159,22 @@ public class BanManager {
 					stm2.execute();
 				}
 			}
-		} catch (NoSuchFileException e) {
-			// already deleted
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return revokedLoggedBan;
+	}
+
+	public static String getBanStorage() {
+		return banStorage;
+	}
+
+	public static void setBanStorage(String banStorage) {
+		BanManager.banStorage = banStorage;
+	}
+
+	public static Map<String, LoggedBanStorage> getStorages() {
+		return STORAGES;
 	}
 }

@@ -190,10 +190,12 @@ time_between_report: 1000
 
 ban:
   active: false
-  # Where he save ban (file or database). For database, don't forget to edit the login information
+  # Where to save bans and logs. Possible values:
+  # - "file" : use text files.
+  # - "database" : use database tables. To use it you must enable and setup the database (in the Database category).
   storage: "file"
-  # If you want to destroy BDD line / File line
-  destroy_when_unban: false
+  # Whether to log expired and revoked bans.
+  log_bans: true
   reliability_need: 90
   alert_need: 5
   # How to calculate the time during the player will be banned
@@ -205,10 +207,11 @@ ban:
   def:
     # Number that you need to be ban definitly
     ban_time: 4
-  # To save banned player on config file (/plugins/Negativity/dir)
-  #
   file:
+    # The directory where bans will be stored (relative to plugins/Negativity)
     dir: "ban"
+    # The directory where ban logs will be stored (relative to plugins/Negativity)
+    logs_dir: "ban/logs"
   db:
     column:
       # For the UUID

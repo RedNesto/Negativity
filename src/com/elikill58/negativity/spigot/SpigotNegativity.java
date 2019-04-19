@@ -54,6 +54,7 @@ public class SpigotNegativity extends JavaPlugin {
 		if (Adapter.getAdapter() == null)
 			Adapter.setAdapter(new SpigotAdapter(this, getConfig()));
 		Adapter ada = Adapter.getAdapter();
+		NegativityConfigMigration.migrateConfig(ada);
 		Version v = Version.getVersion();
 		if (v.equals(Version.HIGHER))
 			getLogger().warning("Unknow server version ! Some problems can appears.");

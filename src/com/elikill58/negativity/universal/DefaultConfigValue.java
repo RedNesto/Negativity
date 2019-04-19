@@ -104,14 +104,13 @@ public class DefaultConfigValue {
 		INTS.put("time_between_report", 1000);
 
 		BOOLEANS.put("ban.active", false);
-		BOOLEANS.put("ban.destroy_when_unban", false);
+		BOOLEANS.put("ban.log_bans", true);
 		INTS.put("ban.reliability_need", 90);
 		INTS.put("ban.alert_need", 5);
 		STRINGS.put("ban.time.calculator", "360000000 + (%reliability% * 10 * %alert%)");
 		INTS.put("ban.def.ban_time", 4);
-		BOOLEANS.put("ban.file.isActive", false);
 		STRINGS.put("ban.file.dir", "ban");
-		BOOLEANS.put("ban.db.isActive", false);
+		STRINGS.put("ban.file.logs_dir", "ban/logs");
 		STRINGS.put("ban.db.column.uuid", "uuid");
 		STRINGS.put("ban.db.column.time", "time");
 		STRINGS.put("ban.db.column.def", "def");
