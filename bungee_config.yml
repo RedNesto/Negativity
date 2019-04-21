@@ -24,6 +24,7 @@ Database:
   table_perm: "myTable"
   table_lang: "myTable"
   table_ban: "ban"
+  table_ban_log: "ban_log"
   column_perm: "rank"
   column_lang: "lang"
   saveInCache: false # To do less request to your database

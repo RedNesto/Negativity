@@ -36,6 +36,7 @@ Database:
   table_perm: "myTable"
   table_lang: "myTable"
   table_ban: "ban"
+  table_ban_log: "ban_log"
   column_perm: "rank"
   column_lang: "lang"
   saveInCache: false # To do less request to your database
@@ -190,10 +191,12 @@ time_between_report: 1000
 
 ban:
   active: false
-  # Where to save bans and logs. Possible values:
+  # Where to save active bans. Possible values:
   # - "file" : use text files.
   # - "database" : use database tables. To use it you must enable and setup the database (in the Database category).
   storage: "file"
+  # Where to save ban logs. Accepts the same values as ban.storage.
+  log_storage: "file"
   # Whether to log expired and revoked bans.
   log_bans: true
   reliability_need: 90

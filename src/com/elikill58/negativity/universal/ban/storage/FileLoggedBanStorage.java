@@ -7,6 +7,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -14,15 +15,31 @@ import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanType;
+import com.elikill58.negativity.universal.ban.BansMigration;
 import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class FileLoggedBanStorage implements LoggedBanStorage {
+
+	private Supplier<File> loadDirSupplier;
+
+	public FileLoggedBanStorage() {
+		this(() -> Ban.banLogsDir);
+	}
+
+	/**
+	 * This constructor has been made for {@link BansMigration#migrateBans()}.
+	 * <p>
+	 * Consider this constructor as internal, its signature and behaviour may change at any time.
+	 */
+	public FileLoggedBanStorage(Supplier<File> loadDirSupplier) {
+		this.loadDirSupplier = loadDirSupplier;
+	}
 
 	@Override
 	public List<LoggedBan> load(UUID playerId) {
 		List<LoggedBan> loadedBans = new ArrayList<>();
 
-		File banFile = new File(Ban.banDir.getAbsolutePath(), playerId + ".txt");
+		File banFile = new File(loadDirSupplier.get(), playerId + ".txt");
 		if (!banFile.exists())
 			return loadedBans;
 
@@ -42,21 +59,27 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 	@Override
 	public void save(LoggedBan ban) {
 		try {
-			File f = new File(Ban.banDir, ban.getPlayerId() + ".txt");
-			if (!f.exists())
+			File f = new File(Ban.banLogsDir, ban.getPlayerId() + ".txt");
+			if (!f.exists()) {
+				f.getParentFile().mkdirs();
 				f.createNewFile();
+			}
 			Files.write(f.toPath(),
-					(ban.getExpirationTime()
-							+ ":reason=" + ban.getReason().replaceAll(":", "")
-							+ ":def=" + ban.isDefinitive()
-							+ ":bantype=" + ban.getBanType().name()
-							+ (ban.getCheatName() != null ? ":ac=" + ban.getCheatName() : "")
-							+ ":by=" + ban.getBannedBy()
-							+ ":unban=" + ban.isRevoked() + "\n").getBytes(),
+					(toString(ban) + "\n").getBytes(),
 					StandardOpenOption.APPEND);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static String toString(LoggedBan ban) {
+		return ban.getExpirationTime()
+				+ ":reason=" + ban.getReason().replaceAll(":", "")
+				+ ":def=" + ban.isDefinitive()
+				+ ":bantype=" + ban.getBanType().name()
+				+ (ban.getCheatName() != null ? ":ac=" + ban.getCheatName() : "")
+				+ ":by=" + ban.getBannedBy()
+				+ ":unban=" + ban.isRevoked();
 	}
 
 	@Nullable
