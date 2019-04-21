@@ -45,8 +45,6 @@ public class CacheManager1_7 extends CacheManager {
 			File userFile = new File(SpigotNegativity.getInstance().getDataFolder(), "user" + File.separator + playerId + ".yml");
 			YamlConfiguration userData = YamlConfiguration.loadConfiguration(userFile);
 			account.setLang(userData.getString("lang", TranslatedMessages.DEFAULT_LANG));
-
-			account.loadBanRequest();
 			return account;
 		}
 	}

@@ -25,7 +25,7 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 		try {
 			Adapter ada = Adapter.getAdapter();
 			PreparedStatement stm = Database.getConnection()
-					.prepareStatement("SELECT * FROM " + Database.table_ban + " WHERE " + ada.getStringInConfig("ban.db.column.uuid") + " = ?");
+					.prepareStatement("SELECT * FROM " + Database.table_ban_log + " WHERE " + ada.getStringInConfig("ban.db.column.uuid") + " = ?");
 			stm.setString(1, playerId.toString());
 			ResultSet rs = stm.executeQuery();
 			while (rs.next()) {
@@ -75,14 +75,14 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 				content.add(fillPlaceholders(account, ban, hash.get(keys)));
 			}
 			PreparedStatement stm = Database.getConnection().prepareStatement(
-					"INSERT INTO " + Database.table_ban + "(" + values + ") VALUES (?,?,?,?,?,?" + parentheses + ")");
+					"INSERT INTO " + Database.table_ban_log + "(" + values + ") VALUES (?,?,?,?,?,?" + parentheses + ")");
 			stm.setString(1, ban.getPlayerId().toString());
 			stm.setInt(2, (int) (ban.getExpirationTime()));
 			stm.setBoolean(3, ban.isDefinitive());
 			stm.setString(4, ban.getReason());
 			stm.setString(5, ban.getCheatName());
 			stm.setString(6, ban.getBannedBy());
-			int i = 5;
+			int i = 7;
 			for (String cc : content) {
 				String s = fillPlaceholders(account, ban, cc);
 				if (UniversalUtils.isInteger(s))
@@ -96,7 +96,7 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 		}
 	}
 
-	private static String fillPlaceholders(NegativityAccount nAccount, BaseBan ban, String s) {
+	static String fillPlaceholders(NegativityAccount nAccount, BaseBan ban, String s) {
 		String life = "?";
 		String name = "???";
 		String level = "?";

@@ -61,6 +61,7 @@ public class DefaultConfigValue {
 		STRINGS.put("Database.table_perm", "myTable");
 		STRINGS.put("Database.table_lang", "myTable");
 		STRINGS.put("Database.table_ban", "ban");
+		STRINGS.put("Database.table_ban_log", "ban_log");
 		BOOLEANS.put("Database.saveInCache", true);
 
 		BOOLEANS.put("inventory.alerts.see.no_started_verif_cheat", false);
@@ -104,6 +105,8 @@ public class DefaultConfigValue {
 		INTS.put("time_between_report", 1000);
 
 		BOOLEANS.put("ban.active", false);
+		STRINGS.put("ban.storage", "file");
+		STRINGS.put("ban.log_storage", "file");
 		BOOLEANS.put("ban.log_bans", true);
 		INTS.put("ban.reliability_need", 90);
 		INTS.put("ban.alert_need", 5);

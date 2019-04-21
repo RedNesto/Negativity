@@ -1,56 +1,44 @@
 package com.elikill58.negativity.universal.ban;
 
-import java.io.File;
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.elikill58.negativity.universal.Database;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.ban.storage.ActiveBanStorage;
+import com.elikill58.negativity.universal.ban.storage.DatabaseActiveBanStorage;
 import com.elikill58.negativity.universal.ban.storage.DatabaseLoggedBanStorage;
+import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
 import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 import com.elikill58.negativity.universal.ban.storage.LoggedBanStorage;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class BanManager {
 
-	private static final Map<String, LoggedBanStorage> STORAGES = new HashMap<>();
+	private static final Map<String, LoggedBanStorage> LOG_STORAGES = new HashMap<>();
+	private static final Map<String, ActiveBanStorage> BAN_STORAGES = new HashMap<>();
 
 	static {
-		STORAGES.put("file", new FileLoggedBanStorage());
-		STORAGES.put("database", new DatabaseLoggedBanStorage());
+		LOG_STORAGES.put("file", new FileLoggedBanStorage());
+		LOG_STORAGES.put("database", new DatabaseLoggedBanStorage());
+
+		BAN_STORAGES.put("file", new FileActiveBanStorage());
+		BAN_STORAGES.put("database", new DatabaseActiveBanStorage());
 	}
 
-	private static String banStorage = "file";
+	private static String banStorageId = "file";
+	private static String logStorageId = "file";
+
+	private static boolean logBans = true;
 
 	public static List<LoggedBan> getLoggedBans(UUID playerId) {
-		return STORAGES.get(banStorage).load(playerId);
-	}
-
-	private static void saveLoggedBans(Collection<LoggedBan> bans) {
-		Set<UUID> tracker = new HashSet<>();
-		for (LoggedBan ban : bans) {
-			if (tracker.add(ban.getPlayerId())) {
-				// Delete existing file to ensure we have no duplicated entries
-				File bansFile = new File(Ban.banDir, ban.getPlayerId() + ".txt");
-				bansFile.delete();
-			}
-
-			saveLoggedBan(ban);
-		}
-	}
-
-	private static void saveLoggedBan(LoggedBan ban) {
-		STORAGES.get(banStorage).save(ban);
+		return getLogStorage().load(playerId);
 	}
 
 	@Nullable
@@ -58,25 +46,19 @@ public class BanManager {
 		if (!Ban.banActive)
 			return null;
 
-		// TODO for now we save active bans with the logged ones, but once we separate them
-		//  we will no longer need to use this method and will be able to get the active ban directly.
-		LoggedBan loggedActive = getActiveBanFromLoggedBans(getLoggedBans(playerId));
-		if (loggedActive == null)
+		ActiveBan activeBan = getBanStorage().load(playerId);
+		if (activeBan == null) {
 			return null;
+		}
 
-		return ActiveBan.from(loggedActive);
-	}
+		long now = System.currentTimeMillis();
+		if (activeBan.isDefinitive() || activeBan.getExpirationTime() > now) {
+			return activeBan;
+		}
 
-	@Nullable
-	private static LoggedBan getActiveBanFromLoggedBans(List<LoggedBan> loggedBans) {
-		if (loggedBans.isEmpty())
-			return null;
-
-		final long now = System.currentTimeMillis();
-		for (LoggedBan loggedBan : loggedBans) {
-			if (!loggedBan.isRevoked() && (loggedBan.isDefinitive() || loggedBan.getExpirationTime() > now)) {
-				return loggedBan;
-			}
+		getBanStorage().remove(playerId);
+		if (logBans) {
+			getLogStorage().save(LoggedBan.from(activeBan, false));
 		}
 
 		return null;
@@ -99,9 +81,7 @@ public class BanManager {
 			return null;
 
 		ActiveBan ban = new ActiveBan(playerId, reason, bannedBy, isDefinitive, banType, expirationTime, cheatName);
-
-		// TODO for now we save active bans with logged ones
-		saveLoggedBan(LoggedBan.from(ban, false));
+		getBanStorage().save(ban);
 
 		if (nPlayer != null) {
 			nPlayer.banEffect();
@@ -116,6 +96,8 @@ public class BanManager {
 	 * Revokes the active ban of the player identified by the given UUID.
 	 * <p>
 	 * The revocation may fail if the player is not banned or bans are disabled.
+	 * <p>
+	 * If ban logging is disabled, a LoggedBan will still be returned even though it will not be saved.
 	 *
 	 * @param playerId the UUID of the player to unban
 	 *
@@ -126,55 +108,57 @@ public class BanManager {
 		if (!Ban.banActive)
 			return null;
 
-		List<LoggedBan> loggedBans = getLoggedBans(playerId);
-		// TODO same as TODO comment in #getActiveBan
-		LoggedBan activeLoggedBan = getActiveBanFromLoggedBans(loggedBans);
-		if (activeLoggedBan == null)
+		ActiveBan activeBan = getBanStorage().load(playerId);
+		if (activeBan == null)
 			return null;
 
-		LoggedBan revokedLoggedBan = LoggedBan.from(activeLoggedBan, true);
+		getBanStorage().remove(playerId);
+		LoggedBan revokedLoggedBan = LoggedBan.from(activeBan, true);
 
-		try {
-			Adapter ada = Adapter.getAdapter();
-			if (ada.getBooleanInConfig("ban.log_bans")) {
-				if (banStorage.equals("file")) {
-					// TODO We need to replace the active LoggedBan by the revoked one since LoggedBan is immutable,
-					//  but we have to set LoggedBan#isRevoked to true.
-					//  This will no longer be needed once we separate logged and active bans storage.
-					loggedBans.remove(activeLoggedBan);
-					loggedBans.add(revokedLoggedBan);
-
-					saveLoggedBans(loggedBans);
-				} else {
-					String uc = ada.getStringInConfig("ban.db.column.uuid");
-					PreparedStatement stm = Database.getConnection().prepareStatement("UPDATE " + Database.table_ban
-							+ " SET " + ada.getStringInConfig("ban.db.column.time") + " = ? WHERE " + uc + " = ?");
-					stm.setInt(1, 0);
-					stm.setString(2, playerId.toString());
-					stm.execute();
-					PreparedStatement stm2 = Database.getConnection().prepareStatement("UPDATE " + Database.table_ban
-							+ " SET " + ada.getStringInConfig("ban.db.column.def") + " = ? WHERE " + uc + " = ?");
-					stm2.setBoolean(1, false);
-					stm2.setString(2, playerId.toString());
-					stm2.execute();
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (logBans) {
+			getLogStorage().save(revokedLoggedBan);
 		}
 
 		return revokedLoggedBan;
 	}
 
-	public static String getBanStorage() {
-		return banStorage;
+	public static String getBanStorageId() {
+		return banStorageId;
 	}
 
-	public static void setBanStorage(String banStorage) {
-		BanManager.banStorage = banStorage;
+	public static void setBanStorageId(String banStorage) {
+		BanManager.banStorageId = banStorage;
 	}
 
-	public static Map<String, LoggedBanStorage> getStorages() {
-		return STORAGES;
+	public static String getLogStorageId() {
+		return logStorageId;
+	}
+
+	public static void setLogStorageId(String logStorage) {
+		BanManager.logStorageId = logStorage;
+	}
+
+	public static ActiveBanStorage getBanStorage() {
+		return BAN_STORAGES.get(banStorageId);
+	}
+
+	public static LoggedBanStorage getLogStorage() {
+		return LOG_STORAGES.get(logStorageId);
+	}
+
+	public static Collection<String> getAvailableBanStorageIds() {
+		return BAN_STORAGES.keySet();
+	}
+
+	public static Collection<String> getAvailableLogStorageIds() {
+		return LOG_STORAGES.keySet();
+	}
+
+	public static boolean isLogBans() {
+		return logBans;
+	}
+
+	public static void setLogBans(boolean logBans) {
+		BanManager.logBans = logBans;
 	}
 }
