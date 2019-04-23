@@ -29,6 +29,7 @@ import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.Version;
 import com.google.common.io.ByteStreams;
 
 public class SpigotAdapter extends Adapter {
@@ -137,7 +138,11 @@ public class SpigotAdapter extends Adapter {
 
 	@Override
 	public boolean containsConfigValue(String dir) {
-		return config.contains(dir, true);
+		if (Version.getVersion().equals(Version.V1_7)) {
+			return config.get(dir) != null;
+		} else {
+			return config.contains(dir, true);
+		}
 	}
 
 	@Override
