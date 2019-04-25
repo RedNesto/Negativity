@@ -1,5 +1,6 @@
 package com.elikill58.negativity.universal.ban;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -53,5 +54,24 @@ public class BaseBan {
 	@Nullable
 	public String getCheatName() {
 		return cheatName;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof BaseBan)) return false;
+		BaseBan baseBan = (BaseBan) o;
+		return isDefinitive == baseBan.isDefinitive &&
+				expirationTime == baseBan.expirationTime &&
+				playerId.equals(baseBan.playerId) &&
+				reason.equals(baseBan.reason) &&
+				bannedBy.equals(baseBan.bannedBy) &&
+				banType == baseBan.banType &&
+				Objects.equals(cheatName, baseBan.cheatName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(playerId, reason, bannedBy, isDefinitive, banType, expirationTime, cheatName);
 	}
 }
