@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.ban.processor.BaseNegativityBanProcessor;
 import com.elikill58.negativity.universal.ban.storage.ActiveBanStorage;
 import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
 import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
@@ -21,7 +22,7 @@ public class BansMigration {
 
 	public static void migrateBans() {
 		// We only support file storage migration
-		if (!Ban.banActive && !BanManager.getBanStorageId().equals("file"))
+		if (!Ban.banActive && !BaseNegativityBanProcessor.getBanStorageId().equals("file"))
 			return;
 
 		Path bansDir = Ban.banDir.toPath();

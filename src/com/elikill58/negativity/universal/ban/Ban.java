@@ -13,6 +13,7 @@ import javax.script.ScriptException;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.ban.processor.BaseNegativityBanProcessor;
 
 public class Ban {
 
@@ -52,10 +53,10 @@ public class Ban {
 		if(!(banActive = adapter.getBooleanInConfig("ban.active")))
 			return;
 
-		loadStorages("ban.storage", BanManager.getAvailableBanStorageIds(), BanManager::setBanStorageId);
-		loadStorages("ban.log_storage", BanManager.getAvailableLogStorageIds(), BanManager::setLogStorageId);
+		loadStorages("ban.storage", BaseNegativityBanProcessor.getAvailableBanStorageIds(), BaseNegativityBanProcessor::setBanStorageId);
+		loadStorages("ban.log_storage", BaseNegativityBanProcessor.getAvailableLogStorageIds(), BaseNegativityBanProcessor::setLogStorageId);
 
-		BanManager.setLogBans(adapter.getBooleanInConfig("ban.log_bans"));
+		BaseNegativityBanProcessor.setLogBans(adapter.getBooleanInConfig("ban.log_bans"));
 
 		DB_CONTENT.putAll(adapter.getKeysListInConfig("ban.db.other"));
 
