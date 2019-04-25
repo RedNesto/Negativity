@@ -8,6 +8,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
+import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -18,10 +19,8 @@ import com.elikill58.negativity.sponge.utils.Utils;
 public class FightManager {
 
 	@Listener
-	public void onEntityDamageByEntity(DamageEntityEvent e, @First Player p) {
-		if (!(p instanceof Player) && !(e.getTargetEntity() instanceof Player))
-			return;
-		SpongeNegativityPlayer.getNegativityPlayer((Player) e.getTargetEntity()).fight();
+	public void onEntityDamageByEntity(DamageEntityEvent e, @First Player p, @Getter("getTargetEntity") Player target) {
+		SpongeNegativityPlayer.getNegativityPlayer(target).fight();
 		SpongeNegativityPlayer.getNegativityPlayer(p).fight();
 	}
 
