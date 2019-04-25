@@ -22,11 +22,11 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 	@Override
 	public List<LoggedBan> load(UUID playerId) {
 		List<LoggedBan> loadedBans = new ArrayList<>();
-		try {
-			Adapter ada = Adapter.getAdapter();
-			PreparedStatement stm = Database.getConnection()
-					.prepareStatement("SELECT * FROM " + Database.table_ban_log + " WHERE " + ada.getStringInConfig("ban.db.column.uuid") + " = ?");
+		Adapter ada = Adapter.getAdapter();
+		try (PreparedStatement stm = Database.getConnection()
+				.prepareStatement("SELECT * FROM " + Database.table_ban_log + " WHERE " + ada.getStringInConfig("ban.db.column.uuid") + " = ?")) {
 			stm.setString(1, playerId.toString());
+
 			ResultSet rs = stm.executeQuery();
 			while (rs.next()) {
 				boolean hasCheatDetect = false, hasBy = false;
@@ -47,7 +47,6 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 				String bannedBy = hasBy ? rs.getString(ada.getStringInConfig("ban.db.column.by")) : "console";
 				loadedBans.add(new LoggedBan(playerId, reason, bannedBy, isDefinitive, BanType.UNKNOW, expirationTime, cheatName, false));
 			}
-			rs.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,8 +56,8 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 
 	@Override
 	public void save(LoggedBan ban) {
+		Adapter ada = Adapter.getAdapter();
 		try {
-			Adapter ada = Adapter.getAdapter();
 			NegativityAccount account = ada.getNegativityAccount(ban.getPlayerId());
 			String values = ada.getStringInConfig("ban.db.column.uuid") + ","
 					+ ada.getStringInConfig("ban.db.column.time") + ","
@@ -74,24 +73,27 @@ public class DatabaseLoggedBanStorage implements LoggedBanStorage {
 				parentheses += ",?";
 				content.add(fillPlaceholders(account, ban, hash.get(keys)));
 			}
-			PreparedStatement stm = Database.getConnection().prepareStatement(
-					"INSERT INTO " + Database.table_ban_log + "(" + values + ") VALUES (?,?,?,?,?,?" + parentheses + ")");
-			stm.setString(1, ban.getPlayerId().toString());
-			stm.setInt(2, (int) (ban.getExpirationTime()));
-			stm.setBoolean(3, ban.isDefinitive());
-			stm.setString(4, ban.getReason());
-			stm.setString(5, ban.getCheatName());
-			stm.setString(6, ban.getBannedBy());
-			int i = 7;
-			for (String cc : content) {
-				String s = fillPlaceholders(account, ban, cc);
-				if (UniversalUtils.isInteger(s))
-					stm.setInt(i++, Integer.parseInt(s));
-				else
-					stm.setString(i++, s);
+
+			try (PreparedStatement stm = Database.getConnection().prepareStatement(
+					"INSERT INTO " + Database.table_ban_log + "(" + values + ") VALUES (?,?,?,?,?,?" + parentheses + ")")) {
+				stm.setString(1, ban.getPlayerId().toString());
+				stm.setInt(2, (int) (ban.getExpirationTime()));
+				stm.setBoolean(3, ban.isDefinitive());
+				stm.setString(4, ban.getReason());
+				stm.setString(5, ban.getCheatName());
+				stm.setString(6, ban.getBannedBy());
+				int i = 7;
+				for (String cc : content) {
+					String s = fillPlaceholders(account, ban, cc);
+					if (UniversalUtils.isInteger(s))
+						stm.setInt(i++, Integer.parseInt(s));
+					else
+						stm.setString(i++, s);
+				}
+				stm.executeUpdate();
 			}
-			stm.execute();
 		} catch (Exception e) {
+			ada.error("An error occurred while saving a logged ban of player with ID " + ban.getPlayerId());
 			e.printStackTrace();
 		}
 	}
