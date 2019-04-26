@@ -64,7 +64,6 @@ import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.SpongeAdapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
-import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.google.inject.Inject;
@@ -438,7 +437,7 @@ public class SpongeNegativity implements RawDataListener {
 							+ reliability);
 		Stats.updateStats(StatsType.CHEATS, p.getName() + ": " + c.getKey() + " (Reliability: " + reliability + ") Ping: "
 				+ ping + " Type: " + type.getName());
-		Ban.manageBan(c, np, reliability);
+		CheatManager.banForCheat(c, np, reliability);
 		if (isOnBungeecord)
 			sendMessage(p, c.getName(), reliability, ping, hover_proof);
 		else {

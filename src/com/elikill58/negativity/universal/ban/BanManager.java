@@ -1,27 +1,36 @@
 package com.elikill58.negativity.universal.ban;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.processor.BanProcessor;
+import com.elikill58.negativity.universal.ban.processor.BaseNegativityBanProcessor;
 import com.elikill58.negativity.universal.ban.processor.NegativityBanProcessor;
+import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
+import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 
 public class BanManager {
+
+	public static boolean banActive;
 
 	private static BanProcessor banProcessor = new NegativityBanProcessor();
 
 	public static List<LoggedBan> getLoggedBans(UUID playerId) {
-		if (!Ban.banActive)
+		if (!banActive)
 			return Collections.emptyList();
 
 		return banProcessor.getLoggedBans(playerId);
 	}
 
 	public static boolean isBanned(UUID playerId) {
-		if (!Ban.banActive)
+		if (!banActive)
 			return false;
 
 		return banProcessor.isBanned(playerId);
@@ -29,7 +38,7 @@ public class BanManager {
 
 	@Nullable
 	public static ActiveBan getActiveBan(UUID playerId) {
-		if (!Ban.banActive)
+		if (!banActive)
 			return null;
 
 		return banProcessor.getActiveBan(playerId);
@@ -45,7 +54,7 @@ public class BanManager {
 	 */
 	@Nullable
 	public static ActiveBan banPlayer(UUID playerId, String reason, String bannedBy, boolean isDefinitive, BanType banType, long expirationTime, @Nullable String cheatName) {
-		if (!Ban.banActive)
+		if (!banActive)
 			return null;
 
 		return banProcessor.banPlayer(playerId, reason, bannedBy, isDefinitive, banType, expirationTime, cheatName);
@@ -64,9 +73,44 @@ public class BanManager {
 	 */
 	@Nullable
 	public static LoggedBan revokeBan(UUID playerId) {
-		if (!Ban.banActive)
+		if (!banActive)
 			return null;
 
 		return banProcessor.revokeBan(playerId);
+	}
+
+	public static void init() {
+		Adapter adapter = Adapter.getAdapter();
+		FileActiveBanStorage.banDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.dir"));
+		FileLoggedBanStorage.banLogsDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.logs_dir"));
+		if(!(banActive = adapter.getBooleanInConfig("ban.active")))
+			return;
+
+		loadStorages("ban.storage", BaseNegativityBanProcessor.getAvailableBanStorageIds(), BaseNegativityBanProcessor::setBanStorageId);
+		loadStorages("ban.log_storage", BaseNegativityBanProcessor.getAvailableLogStorageIds(), BaseNegativityBanProcessor::setLogStorageId);
+
+		BaseNegativityBanProcessor.setLogBans(adapter.getBooleanInConfig("ban.log_bans"));
+
+		BansMigration.migrateBans();
+	}
+
+	private static void loadStorages(String propertyName, Collection<String> availableStorages, Consumer<String> storageSetter) {
+		Adapter adapter = Adapter.getAdapter();
+		String banStorage = adapter.getStringInConfig(propertyName);
+		if (banStorage == null) {
+			adapter.log("The property " + propertyName + " is missing from the configuration file. Please add it and restart the server.");
+			return;
+		}
+
+		if (banStorage.equalsIgnoreCase("db"))
+			banStorage = "database";
+
+		if (!availableStorages.contains(banStorage)) {
+			adapter.error("Error while loading ban system. '" + banStorage + "' is an unknown storage type.");
+			adapter.error("Please set a valid storage type, then restart you server.");
+			return;
+		}
+
+		storageSetter.accept(banStorage);
 	}
 }

@@ -13,15 +13,16 @@ import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
-import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanType;
 
 public class FileActiveBanStorage implements ActiveBanStorage {
 
+	public static File banDir;
+
 	@Nullable
 	@Override
 	public ActiveBan load(UUID playerId) {
-		Path banFile = new File(Ban.banDir, "active.txt").toPath();
+		Path banFile = new File(banDir, "active.txt").toPath();
 		if (Files.notExists(banFile))
 			return null;
 
@@ -63,7 +64,7 @@ public class FileActiveBanStorage implements ActiveBanStorage {
 	 * This method exists to avoid implementing the (almost) same logic twice in {@link #load(UUID)} and {@link #save(ActiveBan)}.
 	 */
 	private void replaceBan(UUID playerId, @Nullable ActiveBan ban) throws IOException {
-		Path banFile = new File(Ban.banDir, "active.txt").toPath();
+		Path banFile = new File(banDir, "active.txt").toPath();
 		// If ban is null we only have to remove the ban, but if the storage file does not exist there is nothing to remove,
 		// thus we don't need to do anything.
 		if (ban == null && Files.notExists(banFile))

@@ -13,17 +13,18 @@ import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanType;
 import com.elikill58.negativity.universal.ban.BansMigration;
 import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class FileLoggedBanStorage implements LoggedBanStorage {
 
+	public static File banLogsDir;
+
 	private Supplier<File> loadDirSupplier;
 
 	public FileLoggedBanStorage() {
-		this(() -> Ban.banLogsDir);
+		this(() -> banLogsDir);
 	}
 
 	/**
@@ -59,7 +60,7 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 	@Override
 	public void save(LoggedBan ban) {
 		try {
-			File f = new File(Ban.banLogsDir, ban.getPlayerId() + ".txt");
+			File f = new File(banLogsDir, ban.getPlayerId() + ".txt");
 			if (!f.exists()) {
 				f.getParentFile().mkdirs();
 				f.createNewFile();

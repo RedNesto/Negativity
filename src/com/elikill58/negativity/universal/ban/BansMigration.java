@@ -22,16 +22,16 @@ public class BansMigration {
 
 	public static void migrateBans() {
 		// We only support file storage migration
-		if (!Ban.banActive && !BaseNegativityBanProcessor.getBanStorageId().equals("file"))
+		if (!BanManager.banActive && !BaseNegativityBanProcessor.getBanStorageId().equals("file"))
 			return;
 
-		Path bansDir = Ban.banDir.toPath();
+		Path bansDir = FileActiveBanStorage.banDir.toPath();
 		if (Files.notExists(bansDir))
 			return;
 
 		boolean didMigration = false;
 		boolean migrationFailed = false;
-		LoggedBanStorage loggedBanStorage = new FileLoggedBanStorage(() -> Ban.banDir);
+		LoggedBanStorage loggedBanStorage = new FileLoggedBanStorage(() -> FileActiveBanStorage.banDir);
 		ActiveBanStorage activeBanStorage = new FileActiveBanStorage();
 		try (Stream<Path> dirStream = Files.list(bansDir)) {
 			List<Path> files = dirStream.filter(Files::isRegularFile).collect(Collectors.toList());
