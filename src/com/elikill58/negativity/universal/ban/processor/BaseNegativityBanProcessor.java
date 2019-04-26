@@ -46,6 +46,10 @@ public class BaseNegativityBanProcessor implements BanProcessor {
 	@Nullable
 	@Override
 	public ActiveBan banPlayer(UUID playerId, String reason, String bannedBy, boolean isDefinitive, BanType banType, long expirationTime, @Nullable String cheatName) {
+		if (isBanned(playerId)) {
+			return null;
+		}
+
 		ActiveBan ban = new ActiveBan(playerId, reason, bannedBy, isDefinitive, banType, expirationTime, cheatName);
 		getBanStorage().save(ban);
 		return ban;

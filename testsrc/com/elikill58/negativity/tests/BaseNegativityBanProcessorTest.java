@@ -109,12 +109,12 @@ class BaseNegativityBanProcessorTest {
 		UUID playerId = UUID.randomUUID();
 
 		ActiveBan firstExecutedBan = banProcessor.banPlayer(playerId, "first ban", "JUnit", true, BanType.CONSOLE, 0, "none");
-		assertNotNull(firstExecutedBan, "Ban should be executed");
+		assertNotNull(firstExecutedBan, "First ban should be executed");
 
 		ActiveBan secondExecutedBan = banProcessor.banPlayer(playerId, "second ban", "JUnit", true, BanType.CONSOLE, 0, "none");
-		assertNotNull(secondExecutedBan, "Ban should be executed");
+		assertNull(secondExecutedBan, "Second ban should not be executed");
 
 		ActiveBan activeBan = banProcessor.getActiveBan(playerId);
-		assertEquals(secondExecutedBan, activeBan, "The active ban should be the second executed ban");
+		assertEquals(firstExecutedBan, activeBan, "The active ban should be the first executed ban");
 	}
 }
