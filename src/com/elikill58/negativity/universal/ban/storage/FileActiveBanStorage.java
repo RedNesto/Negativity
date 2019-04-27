@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -79,12 +80,11 @@ public class FileActiveBanStorage implements ActiveBanStorage {
 			Files.createFile(banFile);
 		}
 
-		try (BufferedReader reader = Files.newBufferedReader(banFile);
-		     BufferedWriter writer = Files.newBufferedWriter(banFile)) {
+		List<String> lines = Files.readAllLines(banFile);
+		try (BufferedWriter writer = Files.newBufferedWriter(banFile)) {
 			String playerIdString = playerId.toString();
 
-			String line;
-			while ((line = reader.readLine()) != null) {
+			for (String line : lines) {
 				if (!line.startsWith(playerIdString)) {
 					writer.write(line);
 					writer.newLine();

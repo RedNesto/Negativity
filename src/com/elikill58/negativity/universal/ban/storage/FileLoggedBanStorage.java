@@ -80,7 +80,7 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 				+ ":bantype=" + ban.getBanType().name()
 				+ (ban.getCheatName() != null ? ":ac=" + ban.getCheatName() : "")
 				+ ":by=" + ban.getBannedBy()
-				+ ":unban=" + ban.isRevoked();
+				+ ":revoked=" + ban.isRevoked();
 	}
 
 	@Nullable
@@ -100,7 +100,7 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 		String reason = "";
 		String by = "Negativity";
 		boolean def = false;
-		boolean isUnban = false;
+		boolean isRevoked = false;
 		BanType banType = BanType.UNKNOW;
 		String ac = null;
 		for (String s : content) {
@@ -125,7 +125,8 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 					by = value;
 					break;
 				case "unban":
-					isUnban = Boolean.valueOf(value);
+				case "revoked":
+					isRevoked = Boolean.valueOf(value);
 					break;
 				default:
 					Adapter.getAdapter().warn("Type " + type + " unknow. Value: " + value);
@@ -133,6 +134,6 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 			}
 		}
 
-		return new LoggedBan(playerId, reason, by, def, banType, expirationTime, ac, isUnban);
+		return new LoggedBan(playerId, reason, by, def, banType, expirationTime, ac, isRevoked);
 	}
 }

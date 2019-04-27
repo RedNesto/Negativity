@@ -1,0 +1,2 @@
+0:reason=Cheat (SomeCheat):def=false:bantype=PLUGIN:ac=SomeCheat:by=Negativity:unban=true
+1:reason=Cheat (SomeCheat):def=true:bantype=PLUGIN:ac=SomeCheat:by=Negativity:unban=false
