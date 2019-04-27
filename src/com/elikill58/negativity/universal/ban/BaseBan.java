@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-// TODO rename to Ban when we get rid of the existing Ban helper class
 public class BaseBan {
 
 	private final UUID playerId;
