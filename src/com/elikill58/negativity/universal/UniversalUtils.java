@@ -15,6 +15,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import com.elikill58.negativity.universal.ban.BanManager;
+import com.elikill58.negativity.universal.ban.storage.BanStorageManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class UniversalUtils {
@@ -142,6 +143,7 @@ public class UniversalUtils {
 		DefaultConfigValue.init();
 		Database.init();
 		Perm.init();
+		BanStorageManager.init();
 		BanManager.init();
 		SuspectManager.init();
 		TranslatedMessages.init();

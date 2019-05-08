@@ -7,40 +7,27 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.UniversalUtils;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.BanType;
-import com.elikill58.negativity.universal.ban.BansMigration;
 import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class FileLoggedBanStorage implements LoggedBanStorage {
 
-	public static File banLogsDir;
+	private Config config;
 
-	private Supplier<File> loadDirSupplier;
-
-	public FileLoggedBanStorage() {
-		this(() -> banLogsDir);
-	}
-
-	/**
-	 * This constructor has been made for {@link BansMigration#migrateBans()}.
-	 * <p>
-	 * Consider this constructor as internal, its signature and behaviour may change at any time.
-	 */
-	public FileLoggedBanStorage(Supplier<File> loadDirSupplier) {
-		this.loadDirSupplier = loadDirSupplier;
+	public FileLoggedBanStorage(Config config) {
+		this.config = config;
 	}
 
 	@Override
 	public List<LoggedBan> load(UUID playerId) {
 		List<LoggedBan> loadedBans = new ArrayList<>();
 
-		File banFile = new File(loadDirSupplier.get(), playerId + ".txt");
+		File banFile = new File(getLoadBanDir(), playerId + ".txt");
 		if (!banFile.exists())
 			return loadedBans;
 
@@ -60,7 +47,7 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 	@Override
 	public void save(LoggedBan ban) {
 		try {
-			File f = new File(banLogsDir, ban.getPlayerId() + ".txt");
+			File f = new File(config.banLogsDir, ban.getPlayerId() + ".txt");
 			if (!f.exists()) {
 				f.getParentFile().mkdirs();
 				f.createNewFile();
@@ -71,6 +58,18 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	protected File getLoadBanDir() {
+		return config.banLogsDir;
+	}
+
+	public Config getConfig() {
+		return config;
+	}
+
+	public void setConfig(Config config) {
+		this.config = config;
 	}
 
 	private static String toString(LoggedBan ban) {
@@ -135,5 +134,14 @@ public class FileLoggedBanStorage implements LoggedBanStorage {
 		}
 
 		return new LoggedBan(playerId, reason, by, def, banType, expirationTime, ac, isRevoked);
+	}
+
+	public static class Config {
+
+		public File banLogsDir;
+
+		public Config(File banLogsDir) {
+			this.banLogsDir = banLogsDir;
+		}
 	}
 }

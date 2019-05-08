@@ -291,7 +291,7 @@ public class SpigotNegativity extends JavaPlugin {
 		}
 		Stats.updateStats(StatsType.CHEATS, p.getName() + ": " + c.getKey() + " (Reliability: " + reliability + ") Ping: "
 				+ ping + " Type: " + type.getName());
-		if (!BanManager.isBanned(np.getAccount().getPlayerId()))
+		if (BanManager.isBanned(np.getAccount().getPlayerId()))
 			return false;
 		CheatManager.banForCheat(c, np, reliability);
 		if (isOnBungeecord)

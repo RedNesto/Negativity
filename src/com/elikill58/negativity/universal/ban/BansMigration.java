@@ -1,5 +1,6 @@
 package com.elikill58.negativity.universal.ban;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +21,7 @@ import com.elikill58.negativity.universal.ban.storage.LoggedBanStorage;
 
 public class BansMigration {
 
-	public static void migrateBans() {
+	public static void migrateBans(FileLoggedBanStorage.Config loggedBanStorageConfig) {
 		// We only support file storage migration
 		if (!BanManager.banActive && !BaseNegativityBanProcessor.getBanStorageId().equals("file"))
 			return;
@@ -31,7 +32,7 @@ public class BansMigration {
 
 		boolean didMigration = false;
 		boolean migrationFailed = false;
-		LoggedBanStorage loggedBanStorage = new FileLoggedBanStorage(() -> FileActiveBanStorage.banDir);
+		LoggedBanStorage loggedBanStorage = new MigrationFileLoggedBanStorage(loggedBanStorageConfig);
 		ActiveBanStorage activeBanStorage = new FileActiveBanStorage();
 		try (Stream<Path> dirStream = Files.list(bansDir)) {
 			List<Path> files = dirStream.filter(Files::isRegularFile).collect(Collectors.toList());
@@ -98,5 +99,17 @@ public class BansMigration {
 		}
 
 		return null;
+	}
+
+	private static class MigrationFileLoggedBanStorage extends FileLoggedBanStorage {
+
+		public MigrationFileLoggedBanStorage(Config config) {
+			super(config);
+		}
+
+		@Override
+		protected File getLoadBanDir() {
+			return FileActiveBanStorage.banDir;
+		}
 	}
 }

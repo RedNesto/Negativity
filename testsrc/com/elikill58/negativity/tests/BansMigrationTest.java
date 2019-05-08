@@ -26,6 +26,8 @@ import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 
 class BansMigrationTest {
 
+	static final File banLogsDir = new File(FileActiveBanStorage.banDir, "logs");
+
 	static final UUID TEST_UUID_0 = UUID.fromString("c489bd97-6d0a-4183-b711-5ae56421ac62");
 	static final UUID TEST_UUID_1 = UUID.fromString("c489bd97-6d0a-4183-b711-5ae56421ac63");
 
@@ -35,7 +37,6 @@ class BansMigrationTest {
 			Adapter.setAdapter(new DummyTestAdapter());
 
 		FileActiveBanStorage.banDir = new File("bans");
-		FileLoggedBanStorage.banLogsDir = new File(FileActiveBanStorage.banDir, "logs");
 
 		BaseNegativityBanProcessor.setBanStorageId("file");
 		BaseNegativityBanProcessor.setLogBans(true);
@@ -50,16 +51,18 @@ class BansMigrationTest {
 	@AfterEach
 	void tearDown() throws IOException {
 		FileUtils.deleteDirectory(FileActiveBanStorage.banDir);
-		FileUtils.deleteDirectory(FileLoggedBanStorage.banLogsDir);
+		FileUtils.deleteDirectory(banLogsDir);
 		FileUtils.deleteDirectory(new File("old_bans"));
 	}
 
 	@Test
 	void migrateBans() {
-		BansMigration.migrateBans();
+		FileLoggedBanStorage.Config loggedBanStorageConfig = new FileLoggedBanStorage.Config(banLogsDir);
+
+		BansMigration.migrateBans(loggedBanStorageConfig);
 
 		FileActiveBanStorage activeBanStorage = new FileActiveBanStorage();
-		FileLoggedBanStorage loggedBanStorage = new FileLoggedBanStorage();
+		FileLoggedBanStorage loggedBanStorage = new FileLoggedBanStorage(loggedBanStorageConfig);
 
 		{
 			// TEST_UUID_0 assertions

@@ -1,9 +1,6 @@
 package com.elikill58.negativity.universal.ban.processor;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -12,10 +9,7 @@ import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanType;
 import com.elikill58.negativity.universal.ban.LoggedBan;
 import com.elikill58.negativity.universal.ban.storage.ActiveBanStorage;
-import com.elikill58.negativity.universal.ban.storage.DatabaseActiveBanStorage;
-import com.elikill58.negativity.universal.ban.storage.DatabaseLoggedBanStorage;
-import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
-import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
+import com.elikill58.negativity.universal.ban.storage.BanStorageManager;
 import com.elikill58.negativity.universal.ban.storage.LoggedBanStorage;
 
 /**
@@ -27,21 +21,10 @@ import com.elikill58.negativity.universal.ban.storage.LoggedBanStorage;
  */
 public class BaseNegativityBanProcessor implements BanProcessor {
 
-	private static final Map<String, LoggedBanStorage> LOG_STORAGES = new HashMap<>();
-	private static final Map<String, ActiveBanStorage> BAN_STORAGES = new HashMap<>();
-
 	private static String banStorageId = "file";
 	private static String logStorageId = "file";
 
 	private static boolean logBans = true;
-
-	static {
-		LOG_STORAGES.put("file", new FileLoggedBanStorage());
-		LOG_STORAGES.put("database", new DatabaseLoggedBanStorage());
-
-		BAN_STORAGES.put("file", new FileActiveBanStorage());
-		BAN_STORAGES.put("database", new DatabaseActiveBanStorage());
-	}
 
 	@Nullable
 	@Override
@@ -115,19 +98,11 @@ public class BaseNegativityBanProcessor implements BanProcessor {
 	}
 
 	public static ActiveBanStorage getBanStorage() {
-		return BAN_STORAGES.get(banStorageId);
+		return BanStorageManager.getActiveBanStorage(banStorageId);
 	}
 
 	public static LoggedBanStorage getLogStorage() {
-		return LOG_STORAGES.get(logStorageId);
-	}
-
-	public static Collection<String> getAvailableBanStorageIds() {
-		return BAN_STORAGES.keySet();
-	}
-
-	public static Collection<String> getAvailableLogStorageIds() {
-		return LOG_STORAGES.keySet();
+		return BanStorageManager.getLoggedBanStorage(logStorageId);
 	}
 
 	public static boolean isLogBans() {

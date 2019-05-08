@@ -13,8 +13,8 @@ import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.processor.BanProcessor;
 import com.elikill58.negativity.universal.ban.processor.BaseNegativityBanProcessor;
 import com.elikill58.negativity.universal.ban.processor.NegativityBanProcessor;
+import com.elikill58.negativity.universal.ban.storage.BanStorageManager;
 import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
-import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 
 public class BanManager {
 
@@ -82,16 +82,16 @@ public class BanManager {
 	public static void init() {
 		Adapter adapter = Adapter.getAdapter();
 		FileActiveBanStorage.banDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.dir"));
-		FileLoggedBanStorage.banLogsDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.logs_dir"));
+		adapter.getConfig().fileLoggedBanStorageConfig.banLogsDir = new File(adapter.getDataFolder(), adapter.getStringInConfig("ban.file.logs_dir"));
 		if(!(banActive = adapter.getBooleanInConfig("ban.active")))
 			return;
 
-		loadStorages("ban.storage", BaseNegativityBanProcessor.getAvailableBanStorageIds(), BaseNegativityBanProcessor::setBanStorageId);
-		loadStorages("ban.log_storage", BaseNegativityBanProcessor.getAvailableLogStorageIds(), BaseNegativityBanProcessor::setLogStorageId);
+		loadStorages("ban.storage", BanStorageManager.getAvailableBanStorageIds(), BaseNegativityBanProcessor::setBanStorageId);
+		loadStorages("ban.log_storage", BanStorageManager.getAvailableLogStorageIds(), BaseNegativityBanProcessor::setLogStorageId);
 
 		BaseNegativityBanProcessor.setLogBans(adapter.getBooleanInConfig("ban.log_bans"));
 
-		BansMigration.migrateBans();
+		BansMigration.migrateBans(adapter.getConfig().fileLoggedBanStorageConfig);
 	}
 
 	private static void loadStorages(String propertyName, Collection<String> availableStorages, Consumer<String> storageSetter) {

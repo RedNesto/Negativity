@@ -9,10 +9,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.NegativityConfig;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 
 public class DummyTestAdapter extends Adapter {
+
+	private NegativityConfig config = new NegativityConfig(new FileLoggedBanStorage.Config(null));
 
 	@Override
 	public String getName() {
@@ -20,8 +24,8 @@ public class DummyTestAdapter extends Adapter {
 	}
 
 	@Override
-	public Object getConfig() {
-		return null;
+	public NegativityConfig getConfig() {
+		return config;
 	}
 
 	@Override

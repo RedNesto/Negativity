@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.NegativityConfig;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 
@@ -34,7 +35,7 @@ public abstract class Adapter {
 	}
 
 	public abstract String getName();
-	public abstract Object getConfig();
+	public abstract NegativityConfig getConfig();
 	public abstract File getDataFolder();
 	public abstract String getStringInConfig(String dir);
 	public abstract boolean getBooleanInConfig(String dir);

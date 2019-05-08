@@ -26,9 +26,11 @@ import com.elikill58.negativity.sponge.SpongeNegativityPlayer;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.DefaultConfigValue;
 import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.NegativityConfig;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -39,6 +41,7 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 public class SpongeAdapter extends Adapter {
 
 	private ConfigurationNode config;
+	private NegativityConfig nConfig = new NegativityConfig(new FileLoggedBanStorage.Config(null));
 	private Logger logger;
 	private SpongeNegativity pl;
 	private final HashMap<String, ConfigurationNode> LANGS = new HashMap<>();
@@ -58,8 +61,8 @@ public class SpongeAdapter extends Adapter {
 	}
 
 	@Override
-	public Object getConfig() {
-		return config;
+	public NegativityConfig getConfig() {
+		return nConfig;
 	}
 
 	@Override

@@ -12,21 +12,28 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanType;
 import com.elikill58.negativity.universal.ban.LoggedBan;
 import com.elikill58.negativity.universal.ban.processor.BaseNegativityBanProcessor;
+import com.elikill58.negativity.universal.ban.storage.BanStorageManager;
 import com.elikill58.negativity.universal.ban.storage.FileActiveBanStorage;
-import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 
 class BaseNegativityBanProcessorTest {
 
+	static File banLogsDir = new File(FileActiveBanStorage.banDir, "logs");
 	BaseNegativityBanProcessor banProcessor = new BaseNegativityBanProcessor();
 
 	@BeforeAll
 	static void setUpAll() {
+		if (Adapter.getAdapter() == null)
+			Adapter.setAdapter(new DummyTestAdapter());
+
+		Adapter.getAdapter().getConfig().fileLoggedBanStorageConfig.banLogsDir = banLogsDir;
+
+		BanStorageManager.init();
 		FileActiveBanStorage.banDir = new File("bans");
-		FileLoggedBanStorage.banLogsDir = new File(FileActiveBanStorage.banDir, "logs");
 
 		BaseNegativityBanProcessor.setBanStorageId("file");
 		BaseNegativityBanProcessor.setLogBans(true);
@@ -35,7 +42,7 @@ class BaseNegativityBanProcessorTest {
 	@AfterEach
 	void tearDown() throws IOException {
 		FileUtils.deleteDirectory(FileActiveBanStorage.banDir);
-		FileUtils.deleteDirectory(FileLoggedBanStorage.banLogsDir);
+		FileUtils.deleteDirectory(banLogsDir);
 	}
 
 	@Test

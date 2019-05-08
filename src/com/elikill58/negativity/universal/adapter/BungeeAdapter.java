@@ -16,9 +16,11 @@ import javax.annotation.Nullable;
 import com.elikill58.negativity.bungee.BungeeNegativityPlayer;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.NegativityConfig;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.ban.storage.FileLoggedBanStorage;
 import com.google.common.io.ByteStreams;
 
 import net.md_5.bungee.api.ProxyServer;
@@ -31,6 +33,7 @@ import net.md_5.bungee.config.YamlConfiguration;
 public class BungeeAdapter extends Adapter {
 
 	private Configuration config;
+	private NegativityConfig nConfig = new NegativityConfig(new FileLoggedBanStorage.Config(null));
 	private Plugin pl;
 	private final HashMap<String, Configuration> LANGS = new HashMap<>();
 
@@ -45,8 +48,8 @@ public class BungeeAdapter extends Adapter {
 	}
 
 	@Override
-	public Object getConfig() {
-		return config;
+	public NegativityConfig getConfig() {
+		return nConfig;
 	}
 
 	@Override
