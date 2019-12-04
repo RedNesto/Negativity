@@ -155,7 +155,7 @@ public class SpigotAdapter extends Adapter {
 			fileName = "nl_NL.yml";
 		else if (lang.toLowerCase().contains("sv"))
 			fileName = "sv_SV.yml";
-		try (InputStream in = pl.getResource(fileName); OutputStream out = new FileOutputStream(f)) {
+		try (InputStream in = pl.getResource("spigot/" + fileName); OutputStream out = new FileOutputStream(f)) {
 			ByteStreams.copy(in, out);
 		} catch (Exception e) {
 			e.printStackTrace();

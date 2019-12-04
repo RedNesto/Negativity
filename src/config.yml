@@ -172,6 +172,7 @@ Translation:
   - no_NO
   - pt_BR
   - ru_RU
+  - sv_SV
   - zh_CN
   use_db: false # to get the lang
   default: en_US

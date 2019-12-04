@@ -124,24 +124,24 @@ public class BungeeAdapter extends Adapter {
 	public File copy(String lang, File f) {
 		if (f.exists())
 			return f;
-		String fileName = "bungee_en_US.yml";
+		String fileName = "en_US.yml";
 		if (lang.toLowerCase().contains("fr") || lang.toLowerCase().contains("be"))
-			fileName = "bungee_fr_FR.yml";
+			fileName = "fr_FR.yml";
 		if (lang.toLowerCase().contains("pt") || lang.toLowerCase().contains("br"))
-			fileName = "bungee_pt_BR.yml";
+			fileName = "pt_BR.yml";
 		if (lang.toLowerCase().contains("no"))
-			fileName = "bungee_no_NO.yml";
+			fileName = "no_NO.yml";
 		else if (lang.toLowerCase().contains("ru"))
-			fileName = "bungee_ru_RU.yml";
+			fileName = "ru_RU.yml";
 		else if (lang.toLowerCase().contains("zh") || lang.toLowerCase().contains("cn"))
-			fileName = "bungee_zh_CN.yml";
+			fileName = "zh_CN.yml";
 		else if (lang.toLowerCase().contains("de"))
-			fileName = "bungee_de_DE.yml";
+			fileName = "de_DE.yml";
 		else if (lang.toLowerCase().contains("nl"))
-			fileName = "bungee_nl_NL.yml";
+			fileName = "nl_NL.yml";
 		else if (lang.toLowerCase().contains("sv"))
-			fileName = "bungee_sv_SV.yml";
-		try (InputStream in = pl.getResourceAsStream(fileName); OutputStream out = new FileOutputStream(f)) {
+			fileName = "sv_SV.yml";
+		try (InputStream in = pl.getResourceAsStream("bungee/" + fileName); OutputStream out = new FileOutputStream(f)) {
 			ByteStreams.copy(in, out);
 		} catch (Exception e) {
 			e.printStackTrace();

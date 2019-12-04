@@ -30,7 +30,7 @@ public class BungeeNegativity extends Plugin {
 	@Override
 	public void onEnable() {
 		instance = this;
-		
+
 		new Metrics(this);
 		enableConfig();
 		getProxy().registerChannel("custom:negativity");
@@ -65,7 +65,7 @@ public class BungeeNegativity extends Plugin {
 		try {
 			if (!resourceFile.exists()) {
 				resourceFile.createNewFile();
-				try (InputStream in = getResourceAsStream("bungee_config.yml");
+				try (InputStream in = getResourceAsStream("bungee/config.yml");
 						OutputStream out = new FileOutputStream(resourceFile)) {
 					ByteStreams.copy(in, out);
 				}
