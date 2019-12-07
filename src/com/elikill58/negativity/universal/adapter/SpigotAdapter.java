@@ -247,6 +247,11 @@ public class SpigotAdapter extends Adapter {
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
 	}
 
+	@Override
+	public boolean canSendStats() {
+		return true;
+	}
+
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {

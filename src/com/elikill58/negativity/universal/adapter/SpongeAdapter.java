@@ -355,4 +355,9 @@ public class SpongeAdapter extends Adapter {
 	public void runConsoleCommand(String cmd) {
 		Sponge.getCommandManager().process(Sponge.getServer().getConsole(), cmd);
 	}
+
+	@Override
+	public boolean canSendStats() {
+		return Sponge.getMetricsConfigManager().areMetricsEnabled(pl.getContainer());
+	}
 }

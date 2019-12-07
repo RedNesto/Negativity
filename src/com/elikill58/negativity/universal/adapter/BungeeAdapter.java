@@ -227,4 +227,9 @@ public class BungeeAdapter extends Adapter {
 	public void runConsoleCommand(String cmd) {
 		pl.getProxy().getPluginManager().dispatchCommand(pl.getProxy().getConsole(), cmd);
 	}
+
+	@Override
+	public boolean canSendStats() {
+		return true;
+	}
 }
