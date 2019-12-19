@@ -1,0 +1,10 @@
+{
+  "id": "negativity",
+  "name": "VelocityNegativity",
+  "version": "1.4.1",
+  "authors": [
+    "Elikill58"
+  ],
+  "dependencies": [],
+  "main": "com.elikill58.negativity.velocity.VelocityNegativity"
+}
