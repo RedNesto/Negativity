@@ -1,5 +1,6 @@
 package com.elikill58.negativity.velocity;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -11,18 +12,35 @@ import com.velocitypowered.api.proxy.Player;
 public class VelocityNegativityPlayer extends NegativityPlayer {
 
 	private static final Map<UUID, VelocityNegativityPlayer> PLAYERS = new HashMap<>();
+	private WeakReference<Player> player;
 
 	public static NegativityPlayer getNegativityPlayer(UUID playerId) {
 		return PLAYERS.computeIfAbsent(playerId, VelocityNegativityPlayer::new);
 	}
 
+	public static NegativityPlayer getNegativityPlayer(Player player) {
+		return PLAYERS.computeIfAbsent(player.getUniqueId(), id -> new VelocityNegativityPlayer(player));
+	}
+
 	public VelocityNegativityPlayer(UUID playerId) {
 		super(playerId);
+		this.player = new WeakReference<>(null);
+	}
+
+	public VelocityNegativityPlayer(Player player) {
+		super(player.getUniqueId());
+		this.player = new WeakReference<>(player);
 	}
 
 	@Override
 	public Player getPlayer() {
-		return VelocityNegativity.getInstance().getProxyServer().getPlayer(getUUID()).get();
+		Player playerRef = this.player.get();
+		if (playerRef != null) {
+			return playerRef;
+		}
+		Player player = VelocityNegativity.getInstance().getProxyServer().getPlayer(getUUID()).get();
+		this.player = new WeakReference<>(player);
+		return player;
 	}
 
 	@Override
