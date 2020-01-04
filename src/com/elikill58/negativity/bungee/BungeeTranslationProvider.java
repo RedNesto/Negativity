@@ -4,11 +4,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.elikill58.negativity.universal.translation.TranslationProvider;
+import com.elikill58.negativity.universal.translation.BaseNegativityTranslationProvider;
 
 import net.md_5.bungee.config.Configuration;
 
-public class BungeeTranslationProvider extends TranslationProvider {
+public class BungeeTranslationProvider extends BaseNegativityTranslationProvider {
 
 	private final Configuration msgConfig;
 

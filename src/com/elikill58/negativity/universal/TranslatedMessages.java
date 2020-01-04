@@ -110,10 +110,10 @@ public class TranslatedMessages {
 		return DEFAULT_LANG;
 	}
 
-	public static List<String> getStringListFromLang(String lang, String key) {
+	public static List<String> getStringListFromLang(String lang, String key, Object... placeholders) {
 		TranslationProvider provider = getProviderFor(lang);
 		if (provider != null) {
-			List<String> messageList = provider.getList(key);
+			List<String> messageList = provider.getList(key, placeholders);
 			if (messageList != null && !messageList.isEmpty()) {
 				return messageList;
 			}
@@ -121,10 +121,10 @@ public class TranslatedMessages {
 		return Collections.singletonList(key);
 	}
 
-	public static String getStringFromLang(String lang, String key) {
+	public static String getStringFromLang(String lang, String key, Object... placeholders) {
 		TranslationProvider provider = getProviderFor(lang);
 		if (provider != null) {
-			String message = provider.get(key);
+			String message = provider.get(key, placeholders);
 			if (message != null) {
 				return message;
 			}

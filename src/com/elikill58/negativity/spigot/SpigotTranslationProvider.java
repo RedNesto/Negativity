@@ -6,9 +6,9 @@ import javax.annotation.Nullable;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import com.elikill58.negativity.universal.translation.TranslationProvider;
+import com.elikill58.negativity.universal.translation.BaseNegativityTranslationProvider;
 
-public class SpigotTranslationProvider extends TranslationProvider {
+public class SpigotTranslationProvider extends BaseNegativityTranslationProvider {
 
 	private final YamlConfiguration msgConfig;
 

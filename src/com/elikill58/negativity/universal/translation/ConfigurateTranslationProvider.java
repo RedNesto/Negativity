@@ -10,7 +10,7 @@ import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 
-public class ConfigurateTranslationProvider extends TranslationProvider {
+public class ConfigurateTranslationProvider extends BaseNegativityTranslationProvider {
 
 	private static final TypeToken<String> STRING_TOKEN = TypeToken.of(String.class);
 
