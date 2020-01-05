@@ -3,21 +3,17 @@ package com.elikill58.negativity.universal.translation;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import javax.annotation.Nullable;
 
-public class ResourceBundleTranslationProvider implements TranslationProvider {
+public class ResourceBundleTranslationProvider extends BaseNegativityTranslationProvider {
 
 	private final ResourceBundle bundle;
-	@Nullable
-	private final Locale locale;
 
-	public ResourceBundleTranslationProvider(ResourceBundle bundle, @Nullable Locale locale) {
+	public ResourceBundleTranslationProvider(ResourceBundle bundle) {
 		this.bundle = bundle;
-		this.locale = locale;
 	}
 
 	@Nullable
@@ -46,12 +42,15 @@ public class ResourceBundleTranslationProvider implements TranslationProvider {
 
 	@Override
 	public String applyPlaceholders(String raw, Object... placeholders) {
-		MessageFormat message;
-		if (locale != null) {
-			message = new MessageFormat(raw, locale);
-		} else {
-			message = new MessageFormat(raw);
+		if (!raw.contains("{0}")) {
+			return super.applyPlaceholders(raw, placeholders);
 		}
-		return message.format(placeholders);
+
+		// Collects every placeholders values
+		Object[] formatPlaceholders = new Object[placeholders.length / 2];
+		for (int i = 0; i < formatPlaceholders.length; i++) {
+			formatPlaceholders[i] = placeholders[i * 2 + 1];
+		}
+		return MessageFormat.format(raw, formatPlaceholders);
 	}
 }

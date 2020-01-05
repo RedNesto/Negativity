@@ -1,5 +1,6 @@
 package com.elikill58.negativity.universal.adapter;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.PropertyResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +33,7 @@ import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.TranslatedMessages;
 import com.elikill58.negativity.universal.translation.CachingTranslationProvider;
 import com.elikill58.negativity.universal.translation.ConfigurateTranslationProvider;
+import com.elikill58.negativity.universal.translation.ResourceBundleTranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProviderFactory;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
@@ -186,7 +189,7 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 	}
 
 	public Path copy(String lang, Path filePath) {
-		String fileName = "en_US.yml";
+		String fileName = "en_US.properties";
 		String lowercaseLang = lang.toLowerCase();
 		if (lowercaseLang.contains("fr") || lowercaseLang.contains("be"))
 			fileName = "fr_FR.yml";
@@ -205,22 +208,23 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 		else if (lowercaseLang.contains("sv"))
 			fileName = "sv_SV.yml";
 
-		if (Files.notExists(filePath)) {
+		Path transformedPath = filePath.resolveSibling(fileName);
+		if (Files.notExists(transformedPath)) {
 			pl.getContainer().getAsset(fileName).ifPresent(asset -> {
 				try {
-					Path parentDir = filePath.normalize().getParent();
+					Path parentDir = transformedPath.normalize().getParent();
 					if (parentDir != null) {
 						Files.createDirectories(parentDir);
 					}
 
-					asset.copyToFile(filePath, false);
+					asset.copyToFile(transformedPath, false);
 				} catch (IOException e) {
 					logger.error("Failed to copy default language file " + asset.getFileName(), e);
 				}
 			});
 		}
 
-		return filePath;
+		return transformedPath;
 	}
 
 	private ConfigurationNode loadHoconFile(Path filePath) throws IOException {
@@ -236,9 +240,19 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 	@Override
 	public TranslationProvider createTranslationProvider(String language) {
 		String translationFile = language + ".yml";
-		Path languageFile = messagesDir.resolve(translationFile);
+		Path languageFile = copy(language, messagesDir.resolve(translationFile));
+		if (languageFile.getFileName().toString().endsWith(".properties")) {
+			try (BufferedReader reader = Files.newBufferedReader(languageFile)) {
+				PropertyResourceBundle bundle = new PropertyResourceBundle(reader);
+				return new CachingTranslationProvider(new ResourceBundleTranslationProvider(bundle));
+			} catch (IOException e) {
+				logger.error("Failed to load translation file {}.", translationFile, e);
+				return null;
+			}
+		}
+
 		try {
-			ConfigurationNode messagesNode = loadHoconFile(copy(language, languageFile));
+			ConfigurationNode messagesNode = loadHoconFile(languageFile);
 			return new CachingTranslationProvider(new ConfigurateTranslationProvider(messagesNode));
 		} catch (IOException e) {
 			logger.error("Failed to load translation file {}.", translationFile, e);
