@@ -2,6 +2,7 @@ package com.elikill58.negativity.bungee;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +10,9 @@ import java.util.concurrent.TimeUnit;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanRequest;
 import com.elikill58.negativity.universal.permissions.Perm;
+import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -35,6 +39,29 @@ public class NegativityListener implements Listener {
 	public void onMessageReceived(PluginMessageEvent event) {
 		if (!event.getTag().toLowerCase().contains("negativity"))
 			return;
+
+		try {
+			NegativityMessage message = NegativityMessagesManager.readMessage(event.getData());
+			if (message == null) {
+				String warnMessage = String.format("Received unknown plugin message. Channel %s send by %s to %s",
+						event.getTag(), event.getSender(), event.getReceiver());
+				BungeeNegativity.getInstance().getLogger().warning(warnMessage);
+				return;
+			}
+
+			if (message instanceof AlertMessage) {
+				AlertMessage alert = (AlertMessage) message;
+				System.out.println(String.format("Received alert. Player: %s Cheat: %s Reliability %d Ping %d HoverInfo %s IsMultiple %b",
+						alert.getPlayername(), alert.getCheat(), alert.getReliability(), alert.getPing(), alert.getHoverInfo(), alert.isMultiple()));
+			} else {
+				System.out.println("Unhandled plugin message: " + message.getClass());
+			}
+			return;
+		} catch (IOException e) {
+			BungeeNegativity.getInstance().getLogger().severe("Could not read plugin message.");
+			e.printStackTrace();
+		}
+
 		if(event.getTag().equalsIgnoreCase(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD) || event.getTag().startsWith(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD)) {
 			ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		    out.writeUTF("no");

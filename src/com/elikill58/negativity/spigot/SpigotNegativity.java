@@ -66,6 +66,8 @@ import com.elikill58.negativity.universal.ban.support.AdvancedBanSupport;
 import com.elikill58.negativity.universal.ban.support.EssentialsBanSupport;
 import com.elikill58.negativity.universal.ban.support.MaxBansSupport;
 import com.elikill58.negativity.universal.permissions.Perm;
+import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
 @SuppressWarnings("deprecation")
@@ -384,9 +386,15 @@ public class SpigotNegativity extends JavaPlugin {
 					.info("New " + type.getName() + " for " + p.getName() + " (UUID: " + p.getUniqueId().toString()
 							+ ") (ping: " + ping + ") : suspected of cheating (" + c.getName() + ") Reliability: "
 							+ reliability);
-		if (isOnBungeecord)
-			sendMessage(p, c.getName(), String.valueOf(reliability), String.valueOf(ping), hover_proof, isMultiple);
-		else {
+		if (isOnBungeecord) {
+			try {
+				AlertMessage alertMessage = new AlertMessage(p.getName(), c.getName(), reliability, ping, hover_proof, isMultiple);
+				p.sendPluginMessage(SpigotNegativity.getInstance(), NegativityMessagesManager.CHANNEL_ID, NegativityMessagesManager.writeMessage(alertMessage));
+			} catch (IOException e) {
+				SpigotNegativity.getInstance().getLogger().severe("Could not send alert message to the proxy");
+				e.printStackTrace();
+			}
+		} else {
 			boolean hasPermPeople = false;
 			for (Player pl : Utils.getOnlinePlayers())
 				if (Perm.hasPerm(SpigotNegativityPlayer.getNegativityPlayer(pl), "showAlert")) {
