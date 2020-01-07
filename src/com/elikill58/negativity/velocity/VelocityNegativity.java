@@ -30,6 +30,8 @@ import net.md_5.bungee.config.YamlConfiguration;
         description = "It's an Advanced AntiCheat Detection", authors = {"Elikill58"})
 public class VelocityNegativity {
 
+	public static final LegacyChannelIdentifier NEGATIVITY_CHANNEL_ID = new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY);
+
 	public static Configuration CONFIG;
 	private static VelocityNegativity instance;
 	public static VelocityNegativity getInstance() {
@@ -62,7 +64,7 @@ public class VelocityNegativity {
 		server.getChannelRegistrar().register();
 		
 		getServer().getChannelRegistrar().register(new LegacyChannelIdentifier("custom:negativity"), new LegacyChannelIdentifier("negativity"),
-					new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY), new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD),
+				NEGATIVITY_CHANNEL_ID, new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD),
 					new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_MOD));
 		
 		Adapter.setAdapter(new VelocityAdapter(this, CONFIG));
