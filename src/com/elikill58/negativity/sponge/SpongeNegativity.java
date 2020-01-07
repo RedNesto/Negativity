@@ -74,6 +74,8 @@ import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.SpongeAdapter;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.permissions.Perm;
+import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.google.inject.Inject;
 
@@ -519,9 +521,13 @@ public class SpongeNegativity implements RawDataListener {
 	}
 
 	private static void sendMessage(Player p, String cheatName, int reliability, int ping, String hover, boolean isMultiple) {
-		String msg = p.getName() + "/**/" + cheatName + "/**/" + reliability + "/**/" + ping + "/**/" + hover + "/**/" + (isMultiple ? "alert_multiple" : "alert");
 		channel.sendTo(p, (payload) -> {
-			payload.writeUTF(msg);
+			try {
+				AlertMessage message = new AlertMessage(p.getName(), cheatName, reliability, ping, hover, isMultiple);
+				payload.writeBytes(NegativityMessagesManager.writeMessage(message));
+			} catch (IOException e) {
+				SpongeNegativity.getInstance().getLogger().error("Could not send alert message to the proxy.", e);
+			}
 		});
 	}
 

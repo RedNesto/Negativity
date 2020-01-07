@@ -2,6 +2,7 @@ package com.elikill58.negativity.velocity;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +10,9 @@ import java.util.concurrent.TimeUnit;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.ban.BanRequest;
 import com.elikill58.negativity.universal.permissions.Perm;
+import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -33,44 +37,71 @@ public class NegativityListener {
 	public void onMessageReceived(PluginMessageEvent event) {
 		if (!event.getIdentifier().getId().toLowerCase().contains("negativity"))
 			return;
+
+		NegativityMessage message;
+		try {
+			message = NegativityMessagesManager.readMessage(event.getData());
+			if (message == null) {
+				VelocityNegativity.getInstance().getLogger().warn(
+						"Received unknown plugin message from channel {} sent by {} to {}",
+						event.getIdentifier().getId(), event.getSource(), event.getTarget());
+				return;
+			}
+		} catch (IOException e) {
+			VelocityNegativity.getInstance().getLogger().error("Could not read plugin message.", e);
+			return;
+		}
+
+		Player p = (Player) (event.getSource() instanceof Player ? event.getSource() : (event.getTarget() instanceof Player ? event.getTarget() : null));
+		if (p == null) {
+			VelocityNegativity.getInstance().getLogger().error("Source and Target not proxied (Source: {} Target: {})", event.getSource(), event.getTarget());
+			return;
+		}
+
+		if (message instanceof AlertMessage) {
+			AlertMessage alert = (AlertMessage) message;
+			Object[] place = new Object[] { "%name%", alert.getPlayername(), "%cheat%", alert.getCheat(),
+					"%reliability%", alert.getReliability(), "%ping%", alert.getPing() };
+			String alertMessageKey = alert.isMultiple() ? "alert_multiple" :"alert";
+			for (Player pp : VelocityNegativity.getInstance().getServer().getAllPlayers())
+				if (Perm.hasPerm(VelocityNegativityPlayer.getNegativityPlayer(pp), "showAlert")) {
+					Builder msg = TextComponent.builder();
+					msg.append(VelocityMessages.getMessage(pp, alertMessageKey, place));
+					String hover = VelocityMessages.getStringMessage(pp, "alert_hover", place);
+					if (!alert.getHoverInfo().isEmpty()) {
+						hover += "\n" + alert.getHoverInfo();
+					}
+
+					if (hover.contains("\n")) {
+						Builder hoverMessage = TextComponent.builder("").color(TextColor.GOLD);
+						for(String s : hover.split("\\n"))
+							hoverMessage.append(VelocityMessages.coloredBungeeMessage(s));
+						msg.hoverEvent(HoverEvent.of(HoverEvent.Action.SHOW_TEXT, hoverMessage.build()));
+					} else {
+						msg.hoverEvent(HoverEvent.of(HoverEvent.Action.SHOW_TEXT, VelocityMessages.coloredBungeeMessage(hover)));
+					}
+					msg.clickEvent(ClickEvent.of(ClickEvent.Action.RUN_COMMAND, getCommand(p, pp)));
+					pp.sendMessage(msg.build());
+				}
+		} else {
+			VelocityNegativity.getInstance().getLogger().warn("Unhandled plugin message: {}", message.getClass().getName());
+		}
+
 		if(event.getIdentifier().getId().equalsIgnoreCase(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD) || event.getIdentifier().getId().startsWith(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD)) {
 			ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		    out.writeUTF("no");
 		    Player player = (Player) (event.getSource() instanceof Player ? event.getSource() : (event.getTarget() instanceof Player ? event.getTarget() : null));
 		    if(player != null)
-		    	player.getCurrentServer().ifPresent((srv) -> {srv.sendPluginMessage(new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD), out.toByteArray());});
-		    else 
+		    	player.getCurrentServer().ifPresent((srv) -> srv.sendPluginMessage(new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD), out.toByteArray()));
+		    else
 				VelocityNegativity.getInstance().getLogger().error("Source and Target not proxied (Sender: "
 						+ event.getSource() + " Receiver: " + event.getTarget() + ")");
 		} else {
 			try (ByteArrayInputStream ba = new ByteArrayInputStream(event.getData());
 					DataInputStream in = new DataInputStream(ba)) {
 				String line = in.readUTF();
-			    Player p = (Player) (event.getSource() instanceof Player ? event.getSource() : (event.getTarget() instanceof Player ? event.getTarget() : null));
-				if (p == null)
-					VelocityNegativity.getInstance().getLogger().error("Source and Target not proxied (Sender: "
-							+ event.getSource() + " Receiver: " + event.getTarget() + ")");
 				String[] parts = line.split("/\\*\\*/");
-				if (parts.length > 3) {
-					Object[] place = new Object[] { "%name%", parts[0], "%cheat%", parts[1], "%reliability%", parts[2],
-							"%ping%", parts[3] };
-					String alertMessage = parts.length > 5 ? "alert" : parts[5];
-					for (Player pp : VelocityNegativity.getInstance().getServer().getAllPlayers())
-						if (Perm.hasPerm(VelocityNegativityPlayer.getNegativityPlayer(pp), "showAlert")) {
-							Builder msg = TextComponent.builder();
-							msg.append(VelocityMessages.getMessage(pp, alertMessage, place));
-							String hover = (VelocityMessages.getStringMessage(pp, "alert_hover", place) + (parts.length > 4 && !parts[4].equalsIgnoreCase("") ? "\n" + parts[4] : ""));
-							if (hover.contains("\n")) {
-								Builder hoverMessage = TextComponent.builder("").color(TextColor.GOLD);
-								for(String s : hover.split("\\n"))
-									hoverMessage.append(VelocityMessages.coloredBungeeMessage(s));
-								msg.hoverEvent(HoverEvent.of(HoverEvent.Action.SHOW_TEXT, hoverMessage.build()));
-							} else
-								msg.hoverEvent(HoverEvent.of(HoverEvent.Action.SHOW_TEXT, VelocityMessages.coloredBungeeMessage(hover)));
-							msg.clickEvent(ClickEvent.of(ClickEvent.Action.RUN_COMMAND, getCommand(p, pp)));
-							pp.sendMessage(msg.build());
-						}
-				} else {
+				if (parts.length <= 3) {
 					Object[] place = new Object[] { "%name%", parts[0], "%reason%", parts[1], "%report%", parts[2] };
 					boolean hasPermitted = false;
 					for (Player pp : VelocityNegativity.getInstance().getServer().getAllPlayers())
@@ -89,11 +120,11 @@ public class NegativityListener {
 			}
 		}
 	}
-	
+
 	private String getCommand(Player p, Player pp) {
 		return (pp.getCurrentServer().get().getServerInfo().equals(p.getCurrentServer().get().getServerInfo()) ? "/tp " : "/server ") + p.getCurrentServer().get().getServerInfo().getName();
 	}
-	
+
 	@Subscribe
 	public void onPostLogin(PostLoginEvent e) {
 		Player p = e.getPlayer();
@@ -122,12 +153,13 @@ public class NegativityListener {
 				p.getCurrentServer().ifPresent((srv) -> {srv.sendPluginMessage(new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD), out.toByteArray());});
 			}
 		}).delay(1, TimeUnit.SECONDS);
-	    
-		if (Perm.hasPerm(np, "showAlert"))
+
+		if (Perm.hasPerm(np, "showAlert")) {
 			for (Report msg : report) {
 				p.sendMessage(msg.toMessage(p));
 				report.remove(msg);
 			}
+		}
 	}
 
 	public static class Report {
