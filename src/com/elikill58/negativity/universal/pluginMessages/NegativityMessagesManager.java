@@ -12,13 +12,11 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.elikill58.negativity.universal.utils.UniversalUtils;
-
 public class NegativityMessagesManager {
 
 	private static final Map<Byte, Supplier<NegativityMessage>> MESSAGES_BY_ID;
 
-	public static final String CHANNEL_ID = UniversalUtils.CHANNEL_NEGATIVITY;
+	public static final String CHANNEL_ID = "negativity:msg";
 
 	static {
 		Map<Byte, Supplier<NegativityMessage>> messages = new HashMap<>();

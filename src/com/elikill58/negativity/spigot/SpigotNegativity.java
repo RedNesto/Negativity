@@ -138,7 +138,7 @@ public class SpigotNegativity extends JavaPlugin {
 		} else {
 			CHANNEL_NAME_FML = "FML|HS";
 		}
-		loadChannelInOut(messenger, UniversalUtils.CHANNEL_NEGATIVITY, channelEvents);
+		loadChannelInOut(messenger, NegativityMessagesManager.CHANNEL_ID, channelEvents);
 		loadChannelInOut(messenger, CHANNEL_NAME_FML, channelEvents);
 		
 		for (Player p : Utils.getOnlinePlayers()) {

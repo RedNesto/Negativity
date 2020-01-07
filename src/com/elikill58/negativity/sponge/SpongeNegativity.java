@@ -231,7 +231,7 @@ public class SpongeNegativity {
 			cmd.register(this, SuspectCommand.create(), "suspect");
 		}
 
-		channel = Sponge.getChannelRegistrar().createRawChannel(this, UniversalUtils.CHANNEL_NEGATIVITY);
+		channel = Sponge.getChannelRegistrar().createRawChannel(this, NegativityMessagesManager.CHANNEL_ID);
 		channel.addListener(new VanillaRawDataListener());
 	}
 

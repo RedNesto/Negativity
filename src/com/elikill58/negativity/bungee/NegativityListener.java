@@ -14,7 +14,6 @@ import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ProxyPingMessage;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
-import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.elikill58.negativity.velocity.VelocityNegativity;
 
 import net.md_5.bungee.api.ChatColor;
@@ -141,7 +140,7 @@ public class NegativityListener implements Listener {
 	public void onServerChange(ServerConnectedEvent event) {
 		try {
 			ClientModsListMessage message = new ClientModsListMessage(event.getPlayer().getModList());
-			event.getServer().sendData(UniversalUtils.CHANNEL_NEGATIVITY, NegativityMessagesManager.writeMessage(message));
+			event.getServer().sendData(NegativityMessagesManager.CHANNEL_ID, NegativityMessagesManager.writeMessage(message));
 		} catch (IOException e) {
 			BungeeNegativity.getInstance().getLogger().log(Level.SEVERE, "Could not write ClientModsListMessage.", e);
 		}

@@ -11,6 +11,7 @@ import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.BungeeAdapter;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.google.common.io.ByteStreams;
 
@@ -33,7 +34,7 @@ public class BungeeNegativity extends Plugin {
 		
 		new Metrics(this);
 		enableConfig();
-		getProxy().registerChannel(UniversalUtils.CHANNEL_NEGATIVITY);
+		getProxy().registerChannel(NegativityMessagesManager.CHANNEL_ID);
 		getProxy().getPluginManager().registerListener(this, new NegativityListener());
 		Adapter.setAdapter(new BungeeAdapter(this, CONFIG));
 		UniversalUtils.init();
