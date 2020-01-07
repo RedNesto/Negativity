@@ -35,8 +35,9 @@ public class NegativityListener {
 
 	@Subscribe
 	public void onMessageReceived(PluginMessageEvent event) {
-		if (!event.getIdentifier().getId().toLowerCase().contains("negativity"))
+		if (!event.getIdentifier().equals(VelocityNegativity.NEGATIVITY_CHANNEL_ID)) {
 			return;
+		}
 
 		NegativityMessage message;
 		try {

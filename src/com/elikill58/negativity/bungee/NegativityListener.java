@@ -141,7 +141,7 @@ public class NegativityListener implements Listener {
 	public void onServerChange(ServerConnectedEvent event) {
 		try {
 			ClientModsListMessage message = new ClientModsListMessage(event.getPlayer().getModList());
-			event.getServer().sendData(UniversalUtils.CHANNEL_NEGATIVITY_MOD, NegativityMessagesManager.writeMessage(message));
+			event.getServer().sendData(UniversalUtils.CHANNEL_NEGATIVITY, NegativityMessagesManager.writeMessage(message));
 		} catch (IOException e) {
 			BungeeNegativity.getInstance().getLogger().log(Level.SEVERE, "Could not write ClientModsListMessage.", e);
 		}

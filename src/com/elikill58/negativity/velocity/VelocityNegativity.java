@@ -61,12 +61,8 @@ public class VelocityNegativity {
     public void onProxyInitialization(ProxyInitializeEvent event) {
 		enableConfig();
 	    server.getEventManager().register(this, new NegativityListener());
-		server.getChannelRegistrar().register();
-		
-		getServer().getChannelRegistrar().register(new LegacyChannelIdentifier("custom:negativity"), new LegacyChannelIdentifier("negativity"),
-				NEGATIVITY_CHANNEL_ID, new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_BUNGEECORD),
-					new LegacyChannelIdentifier(UniversalUtils.CHANNEL_NEGATIVITY_MOD));
-		
+		server.getChannelRegistrar().register(NEGATIVITY_CHANNEL_ID);
+
 		Adapter.setAdapter(new VelocityAdapter(this, CONFIG));
 		UniversalUtils.init();
 		Stats.loadStats();
