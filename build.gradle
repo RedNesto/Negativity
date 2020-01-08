@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '4.0.3'
 }
 
@@ -55,4 +56,45 @@ build.dependsOn shadowJar
 
 shadowJar {
     classifier = null
+}
+
+task('sourcesJar', type: Jar) {
+    dependsOn 'classes'
+    classifier = 'sources'
+    from sourceSets['main'].allSource
+    subprojects { proj -> proj.afterEvaluate {from proj.sourceSets['main'].allSource } }
+}
+
+task('aggregatedJavadocs', type: Javadoc) {
+    destinationDir = file("$buildDir/docs/javadoc")
+    subprojects.each { proj ->
+        proj.afterEvaluate {
+            proj.tasks.withType(Javadoc).each { javadocTask ->
+                source += javadocTask.source
+                classpath += javadocTask.classpath
+                excludes += javadocTask.excludes
+                includes += javadocTask.includes
+            }
+        }
+    }
+}
+
+task('javadocJar', type: Jar) {
+    dependsOn aggregatedJavadocs
+    classifier = 'javadoc'
+    from aggregatedJavadocs.destinationDir
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = group
+            artifactId = 'negativity'
+            version = version
+
+            artifact shadowJar
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
 }
