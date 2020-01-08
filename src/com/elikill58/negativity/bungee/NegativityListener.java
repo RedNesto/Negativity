@@ -14,7 +14,6 @@ import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ProxyPingMessage;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
-import com.elikill58.negativity.velocity.VelocityNegativity;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
@@ -94,7 +93,7 @@ public class NegativityListener implements Listener {
 			try {
 				player.getServer().sendData(NegativityMessagesManager.CHANNEL_ID, NegativityMessagesManager.writeMessage(new ProxyPingMessage()));
 			} catch (IOException e) {
-				VelocityNegativity.getInstance().getLogger().error("Could not write PingProxyMessage.", e);
+				BungeeNegativity.getInstance().getLogger().log(Level.SEVERE, "Could not write PingProxyMessage.", e);
 			}
 		} else if (message instanceof ReportMessage) {
 			ReportMessage report = (ReportMessage) message;
