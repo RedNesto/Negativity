@@ -4,8 +4,6 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '4.0.3'
 }
 
-group = 'com.elikill58'
-
 repositories {
     jcenter()
     // For spigot and bungeecord
@@ -65,24 +63,19 @@ task('sourcesJar', type: Jar) {
     subprojects { proj -> proj.afterEvaluate {from proj.sourceSets['main'].allSource } }
 }
 
-task('aggregatedJavadocs', type: Javadoc) {
-    destinationDir = file("$buildDir/docs/javadoc")
-    subprojects.each { proj ->
-        proj.afterEvaluate {
-            proj.tasks.withType(Javadoc).each { javadocTask ->
-                source += javadocTask.source
-                classpath += javadocTask.classpath
-                excludes += javadocTask.excludes
-                includes += javadocTask.includes
-            }
+def eliappNexusPublishing(RepositoryHandler repoHandler) {
+    repoHandler.maven {
+        name = 'eliapp'
+        credentials(PasswordCredentials) {
+            username project.hasProperty('eliappUsername') ? project.eliappUsername : ''
+            password project.hasProperty('eliappPassword') ? project.eliappPassword : ''
+        }
+        if (project.version.endsWith("-SNAPSHOT")) {
+            url = 'http://eliapp.fr:8081/repository/maven-snapshots/'
+        } else {
+            url = 'http://eliapp.fr:8081/repository/maven-releases/'
         }
     }
-}
-
-task('javadocJar', type: Jar) {
-    dependsOn aggregatedJavadocs
-    classifier = 'javadoc'
-    from aggregatedJavadocs.destinationDir
 }
 
 publishing {
@@ -92,9 +85,47 @@ publishing {
             artifactId = 'negativity'
             version = version
 
-            artifact shadowJar
-            artifact sourcesJar
-            artifact javadocJar
+            // Acts like a meta-artifact, bringing all other modules transiently
+            from components.java
+        }
+    }
+    repositories {
+        eliappNexusPublishing(it)
+    }
+}
+
+subprojects { proj ->
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    proj.afterEvaluate {
+        task('sourcesJar', type: Jar) {
+            dependsOn 'classes'
+            classifier = 'sources'
+            from sourceSets['main'].allSource
+        }
+
+        task('javadocJar', type: Jar) {
+            dependsOn javadoc
+            classifier = 'javadoc'
+            from javadoc.destinationDir
+        }
+
+        publishing {
+            publications {
+                mavenJava(MavenPublication) {
+                    groupId = group
+                    artifactId = project.ext.get('publishedArtifactId')
+                    version = version
+
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
+            }
+            repositories {
+                eliappNexusPublishing(it)
+            }
         }
     }
 }
