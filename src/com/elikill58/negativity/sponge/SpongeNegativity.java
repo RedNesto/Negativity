@@ -75,8 +75,6 @@ import com.elikill58.negativity.universal.adapter.SpongeAdapter;
 import com.elikill58.negativity.universal.ban.Ban;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
-import com.elikill58.negativity.universal.pluginMessages.ClientModsListMessage;
-import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
@@ -232,7 +230,10 @@ public class SpongeNegativity {
 		}
 
 		channel = Sponge.getChannelRegistrar().createRawChannel(this, NegativityMessagesManager.CHANNEL_ID);
-		channel.addListener(new VanillaRawDataListener());
+		if (Sponge.getChannelRegistrar().isChannelAvailable("FML|HS")) {
+			fmlChannel = Sponge.getChannelRegistrar().getOrCreateRaw(this, "FML|HS");
+			fmlChannel.addListener(new FmlRawDataListener());
+		}
 	}
 
 	@Listener
@@ -542,36 +543,19 @@ public class SpongeNegativity {
 		});
 	}
 
-	private static class VanillaRawDataListener implements RawDataListener {
+	private static class FmlRawDataListener implements RawDataListener {
 
 		@Override
 		public void handlePayload(ChannelBuf channelBuf, RemoteConnection connection, Type side) {
-			try {
-				if (!(connection instanceof PlayerConnection)) {
-					return;
-				}
-
-				byte[] rawData = channelBuf.readBytes(channelBuf.available());
-				Player player = ((PlayerConnection) connection).getPlayer();
-				NegativityMessage message = NegativityMessagesManager.readMessage(rawData);
-				if (message == null) {
-					HashMap<String, String> playerMods = SpongeNegativityPlayer.getNegativityPlayer(player).MODS;
-					playerMods.clear();
-					playerMods.putAll(Utils.getModsNameVersionFromMessage(new String(rawData, StandardCharsets.UTF_8)));
-					return;
-				}
-
-				if (message instanceof ClientModsListMessage) {
-					ClientModsListMessage modsMessage = (ClientModsListMessage) message;
-					HashMap<String, String> playerMods = SpongeNegativityPlayer.getNegativityPlayer(player).MODS;
-					playerMods.clear();
-					playerMods.putAll(modsMessage.getMods());
-				} else {
-					getInstance().getLogger().warn("Received unexpected plugin message " + message.getClass().getName());
-				}
-			} catch (IOException e) {
-				getInstance().getLogger().error("Could not read plugin message.", e);
+			if (!(connection instanceof PlayerConnection)) {
+				return;
 			}
+
+			Player player = ((PlayerConnection) connection).getPlayer();
+			byte[] rawData = channelBuf.readBytes(channelBuf.available());
+			HashMap<String, String> playerMods = SpongeNegativityPlayer.getNegativityPlayer(player).MODS;
+			playerMods.clear();
+			playerMods.putAll(Utils.getModsNameVersionFromMessage(new String(rawData, StandardCharsets.UTF_8)));
 		}
 	}
 }
