@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
+}
+
+group = 'com.elikill58'
+
+repositories {
+    jcenter()
+    // For spigot and bungeecord
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    maven {
+        name = 'dmulloy2' // ProtocolLib
+        url = 'http://repo.dmulloy2.net/nexus/repository/public/'
+    }
+    maven {
+        name = 'sk89q' // Worldguard
+        url = 'https://maven.enginehub.org/repo/'
+    }
+    // For sponge
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
+    maven {
+        name = 'spongepowered'
+        url = 'https://repo.spongepowered.org/'
+    }
+    // For velocity
+    maven {
+        name = 'velocity'
+        url = 'https://repo.velocitypowered.com/snapshots/'
+    }
+}
+
+configurations {
+    fatJar
+}
+
+dependencies {
+    compile project(path: 'bungeecord', configuration: 'shadow')
+    compile project(path: 'sponge', configuration: 'shadow')
+    compile project(path: 'spigot', configuration: 'shadow')
+    compile project(path: 'velocity', configuration: 'shadow')
+}
+
+build.dependsOn shadowJar
+
+shadowJar {
+    classifier = null
+}

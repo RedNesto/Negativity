@@ -1,0 +1,59 @@
+buildscript {
+    repositories {
+        maven {
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven'
+        }
+    }
+
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    }
+}
+
+plugins {
+    id 'org.spongepowered.plugin' version '0.9.0'
+    id 'net.minecrell.vanillagradle.server' version '2.2-6'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+archivesBaseName = 'Negativity-Sponge'
+
+repositories {
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
+    maven {
+        name = 'spongepowered'
+        url = 'https://repo.spongepowered.org/'
+    }
+}
+
+dependencies {
+    compile project(':universal')
+
+    compileOnly 'org.spongepowered:spongeapi:7.1.0'
+
+    compileOnly 'com.github.me4502:Precogs:0ecc1f0b85'
+    compileOnly 'com.github.CrushedPixel:PacketGate:33902a1'
+}
+
+minecraft {
+    version = '1.12.2'
+    mappings = 'stable_39'
+    makeObfSourceJar = false
+}
+
+build.dependsOn shadowJar
+
+shadowJar {
+    classifier = null
+    exclude('dummyThing')
+}
+
+sponge.plugin.id = 'negativity'

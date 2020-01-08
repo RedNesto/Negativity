@@ -1,0 +1,52 @@
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+archivesBaseName = 'Negativity-Spigot'
+
+repositories {
+    jcenter()
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    maven {
+        name = 'dmulloy2' // ProtocolLib
+        url = 'http://repo.dmulloy2.net/nexus/repository/public/'
+    }
+    maven {
+        name = 'sk89q' // Worldguard
+        url = 'https://maven.enginehub.org/repo/'
+    }
+}
+
+dependencies {
+    compile project(':universal')
+
+    compileOnly 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
+
+    compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
+    compileOnly 'com.sk89q:worldguard:6.1'
+
+    compileOnly fileTree(dir: 'libs', include: '*.jar')
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter ReplaceTokens, tokens: [version: version]
+    }
+}
+
+build.dependsOn shadowJar
+
+shadowJar {
+    classifier = null
+}

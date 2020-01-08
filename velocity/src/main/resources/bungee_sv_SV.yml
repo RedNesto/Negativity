@@ -1,0 +1,8 @@
+report: "&a[&2Negativity&a] &c%name% &7har blivit raporterad av &c%report% &7för &c%reason%"
+alert: "&a[&2Negativity&a] &c%name%&7 kanske använder &c%cheat% &7(&2Reliability: %Pålitlighet%%&7) !"
+alert_multiple: "&a[&2Negativity&a] &c%name%&7 kanske använder &c%cheat% %nb% tid &7(&2Reliability: %Pålitlighet%%&7) !"
+alert_hover: "&6Pålitlighet: %reliability%%\nPing: %ping%"
+
+ban:
+  kick_time: "&cBannad för %reason% tills %time% bannad av: %by%."
+  kick_def: "&cBannad definitivt för %reason% bannad av: %by%."
