@@ -99,6 +99,16 @@ subprojects { proj ->
     apply plugin: 'maven-publish'
 
     proj.afterEvaluate {
+        // Allow to set a custom plugin output directory
+        def pluginDir = System.getProperty('pluginDir')
+        if (pluginDir != null) {
+            def shadowJar = proj.tasks.findByName('shadowJar')
+            if (shadowJar != null) {
+                shadowJar.destinationDir(rootProject.file(pluginDir))
+                shadowJar.archiveName('Negativity.jar')
+            }
+        }
+
         task('sourcesJar', type: Jar) {
             dependsOn 'classes'
             classifier = 'sources'
