@@ -1,5 +1,8 @@
 package com.elikill58.negativity.sponge;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Optional;
 
 import org.spongepowered.api.Sponge;
@@ -11,10 +14,27 @@ import eu.crushedpixel.sponge.packetgate.api.registry.PacketConnection;
 
 public class PacketManager  extends PacketListenerAdapter {
 
+    private final MethodHandle getPacketHandle;
+
+    public PacketManager() {
+        try {
+            Class<?> packetClass = Class.forName("net.minecraft.network.Packet");
+            getPacketHandle = MethodHandles.publicLookup().findVirtual(PacketEvent.class, "getPacket", MethodType.methodType(packetClass));
+        } catch (NoSuchMethodException | IllegalAccessException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void onPacketRead(PacketEvent event, PacketConnection connection) {
-        String[] parts = event.getPacket().getClass().getName().split("\\.");
-        String packetName = parts[parts.length - 1];
+        String packetName;
+        try {
+            String packetClassName = getPacketHandle.invoke(event).getClass().getName();
+            packetName = packetClassName.substring(packetClassName.lastIndexOf('.') + 1);
+        } catch (Throwable t) {
+            SpongeNegativity.getInstance().getLogger().error("Could not get packet class name.", t);
+            return;
+        }
         Optional<Player> optionalPlayer = Sponge.getServer().getPlayer(connection.getPlayerUUID());
         if(!optionalPlayer.isPresent())
             return;
