@@ -27,6 +27,10 @@ repositories {
         name = 'sk89q' // Worldguard
         url = 'https://maven.enginehub.org/repo/'
     }
+    maven {
+        name = 'eliapp' // For dependencies we host ourselves
+        url = 'http://eliapp.fr:8081/repository/maven-public/'
+    }
 }
 
 dependencies {
@@ -36,6 +40,9 @@ dependencies {
 
     compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
     compileOnly 'com.sk89q:worldguard:6.1'
+    compileOnly 'org.maxgamer:maxbans:2.7.1'
+    compileOnly 'me.leoko:advancedban:2.1.5:RELEASE'
+    compileOnly 'com.earth2me:essentials:2.13.1'
 
     compileOnly fileTree(dir: 'libs', include: '*.jar')
 }
