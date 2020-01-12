@@ -3,13 +3,10 @@ package com.elikill58.negativity.universal.adapter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +23,8 @@ import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
-import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
+import com.elikill58.negativity.universal.dataStorage.file.ProxyFileNegativityAccountStorage;
 import com.elikill58.negativity.universal.translation.CachingTranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProviderFactory;
@@ -49,6 +47,7 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 	public VelocityAdapter(VelocityNegativity pl, Configuration config) {
 		this.pl = pl;
 		this.config = config;
+		NegativityAccountStorage.setStorage(new ProxyFileNegativityAccountStorage());
 	}
 
 	@Override
@@ -117,19 +116,6 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 	@Override
 	public List<String> getStringListInConfig(String dir) {
 		return config.getStringList(dir);
-	}
-
-	@Override
-	public String getStringInOtherConfig(Path relativeFile, String key, String defaultValue) {
-		Path configFile = getDataFolder().toPath().resolve(relativeFile);
-		if (Files.notExists(configFile))
-			return defaultValue;
-		try {
-			return ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile.toFile()).getString(key, defaultValue);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return defaultValue;
-		}
 	}
 
 	@Override
@@ -229,7 +215,7 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {
-		return new NegativityAccount(playerId, TranslatedMessages.getLang(playerId));
+		return NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
 	}
 
 	@Nullable

@@ -32,7 +32,8 @@ import com.elikill58.negativity.universal.DefaultConfigValue;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
-import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
+import com.elikill58.negativity.universal.dataStorage.file.SpongeFileNegativityAccountStorage;
 import com.elikill58.negativity.universal.translation.CachingTranslationProvider;
 import com.elikill58.negativity.universal.translation.ConfigurateTranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProvider;
@@ -60,6 +61,7 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 		this.plugin = sn;
 		this.logger = sn.getLogger();
 		this.messagesDir = sn.getDataFolder().resolve("messages");
+		NegativityAccountStorage.setStorage(new SpongeFileNegativityAccountStorage(sn.getDataFolder().resolve("user")));
 	}
 
 	@Override
@@ -167,23 +169,6 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 			logger.error("Could not get String list from the configuration", e);
 			return Collections.emptyList();
 		}
-	}
-
-	@Override
-	public String getStringInOtherConfig(Path relativeFile, String key, String defaultValue) {
-		Path filePath = plugin.getDataFolder().resolve(relativeFile);
-		if (Files.notExists(filePath))
-			return defaultValue;
-
-		try {
-			ConfigurationNode node = loadHoconFile(filePath);
-			Object[] path = key.split("\\.");
-			return node.getNode(path).getString(defaultValue);
-		} catch (IOException e) {
-			logger.error("Could not get String from an external file", e);
-		}
-
-		return defaultValue;
 	}
 
 	@Override
@@ -322,7 +307,7 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 
 		@Override
 		public NegativityAccount load(UUID playerId) {
-			return new NegativityAccount(playerId, TranslatedMessages.getLang(playerId));
+			return NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
 		}
 	}
 
