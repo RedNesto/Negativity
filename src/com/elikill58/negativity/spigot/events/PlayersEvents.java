@@ -140,8 +140,8 @@ public class PlayersEvents implements Listener {
 
 	@EventHandler
 	public void onBlockBreakEvent(BlockBreakEvent e) {
-		SpigotNegativityPlayer nPlayer = SpigotNegativityPlayer.getNegativityPlayer(e.getPlayer());
-		Minerate minerate = nPlayer.getAccount().getMinerate();
-		minerate.addMine(MinerateType.getMinerateType(e.getBlock().getType().name()), nPlayer);
+		Player player = e.getPlayer();
+		Minerate minerate = Adapter.getAdapter().getNegativityAccount(player.getUniqueId()).getMinerate();
+		minerate.addMine(MinerateType.getMinerateType(e.getBlock().getType().name()), player);
 	}
 }

@@ -19,7 +19,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -41,8 +40,6 @@ import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.CheatKeys;
 import com.elikill58.negativity.universal.FlyingReason;
-import com.elikill58.negativity.universal.Minerate;
-import com.elikill58.negativity.universal.Minerate.MinerateType;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
@@ -78,10 +75,8 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			isOnLadders = false, lastClickInv = false, already_jigsaw = false, jesusState = true, last_is_same_spider = false;
 	public FlyingReason flyingReason = FlyingReason.REGEN;
 	public Material eatMaterial = Material.AIR, lastClick = Material.AIR;
-	public YamlConfiguration file;
 	public Location lastSpiderLoc;
 	public double lastSpiderDistance;
-	public File directory, configFile;
 	public List<String> proof = new ArrayList<>();
 	public boolean isInFight = false;
 	public BukkitTask fightTask = null;
@@ -91,22 +86,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public SpigotNegativityPlayer(Player p) {
 		super(p.getUniqueId());
 		this.p = new WeakReference<>(p);
-		NegativityAccount account = getAccount();
-		File directory = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath() + File.separator
-				+ "user" + File.separator + "proof" + File.separator);
-		directory.mkdirs();
-		try {
-			file = YamlConfiguration.loadConfiguration(
-					configFile = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath()
-							+ File.separator + "user" + File.separator + getUUID()+ ".yml"));
-			file.set("playername", p.getName());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		for (Cheat c : Cheat.values())
-			account.setWarnCount(c, file.getInt("cheats." + c.getKey().toLowerCase()));
-		if (file.contains("better-click"))
-			account.setMostClicksPerSecond(file.getInt("better-click"));
 		initMods(p);
 	}
 
@@ -153,32 +132,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			return;
 		NegativityAccount account = getAccount();
 		account.setWarnCount(c, account.getWarn(c) + 1);
-	}
-
-	public void updateMinerateInFile() {
-		saveData();
-	}
-	
-	private void saveData() {
-		NegativityAccount account = getAccount();
-		try {
-			file.set("lang", account.getLang());
-
-			file.set("better-click", account.getMostClicksPerSecond());
-
-			for (Map.Entry<Cheat, Integer> entry : account.getAllWarns().entrySet()) {
-				file.set("cheats." + entry.getKey().getKey(), entry.getValue());
-			}
-
-			Minerate minerate = account.getMinerate();
-			for (MinerateType mt : MinerateType.values()) {
-				file.set("minerate." + mt.getName().toLowerCase(), minerate.getMinerateType(mt));
-			}
-
-			file.save(configFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void clearPackets() {
@@ -374,7 +327,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 
 	private void destroy() {
 		saveProof();
-		saveData();
 		Adapter.getAdapter().invalidateAccount(getUUID());
 	}
 

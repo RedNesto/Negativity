@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +34,8 @@ import com.elikill58.negativity.universal.DefaultConfigValue;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
+import com.elikill58.negativity.universal.dataStorage.file.SpigotFileNegativityAccountStorage;
 import com.elikill58.negativity.universal.translation.CachingTranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProviderFactory;
@@ -52,6 +52,7 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 
 	public SpigotAdapter(JavaPlugin pl) {
 		this.pl = pl;
+		NegativityAccountStorage.register("file", new SpigotFileNegativityAccountStorage(new File(pl.getDataFolder(), "user")));
 	}
 
 	@Override
@@ -132,14 +133,6 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 	@Override
 	public List<String> getStringListInConfig(String dir) {
 		return pl.getConfig().getStringList(dir);
-	}
-
-	@Override
-	public String getStringInOtherConfig(Path relativeFile, String key, String defaultValue) {
-		Path configFile = pl.getDataFolder().toPath().resolve(relativeFile);
-		if (Files.notExists(configFile))
-			return defaultValue;
-		return YamlConfiguration.loadConfiguration(configFile.toFile()).getString(key, defaultValue);
 	}
 
 	@Override
@@ -269,14 +262,17 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 			return existingAccount;
 		}
 
-		NegativityAccount na = new NegativityAccount(playerId);
+		NegativityAccount na = NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
 		account.put(playerId, na);
 		return na;
 	}
 
 	@Override
 	public void invalidateAccount(UUID playerId) {
-		account.remove(playerId);
+		NegativityAccount account = this.account.remove(playerId);
+		if (account != null) {
+			NegativityAccountStorage.getStorage().saveAccount(account);
+		}
 	}
 
 	@Override

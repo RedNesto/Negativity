@@ -366,8 +366,8 @@ public class SpongeNegativity {
 	@Listener
 	public void onBlockBreak(ChangeBlockEvent.Break e, @First Player p) {
 		String blockId = e.getTransactions().get(0).getOriginal().getState().getType().getId();
-		SpongeNegativityPlayer nPlayer = SpongeNegativityPlayer.getNegativityPlayer(p);
-		nPlayer.getAccount().getMinerate().addMine(MinerateType.fromId(blockId), nPlayer);
+		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(p.getUniqueId());
+		account.getMinerate().addMine(MinerateType.fromId(blockId), p);
 	}
 
 	public void loadConfig() {

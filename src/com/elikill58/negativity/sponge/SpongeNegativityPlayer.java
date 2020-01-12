@@ -1,7 +1,6 @@
 package com.elikill58.negativity.sponge;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -42,14 +41,9 @@ import com.elikill58.negativity.sponge.protocols.ForceFieldProtocol;
 import com.elikill58.negativity.universal.Cheat;
 import com.elikill58.negativity.universal.CheatKeys;
 import com.elikill58.negativity.universal.FlyingReason;
-import com.elikill58.negativity.universal.Minerate;
-import com.elikill58.negativity.universal.Minerate.MinerateType;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.flowpowered.math.vector.Vector3d;
-
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 
 public class SpongeNegativityPlayer extends NegativityPlayer {
 
@@ -79,9 +73,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 			isJumpingWithBlock = false, isOnLadders = false, lastClickInv = false, haveClick = false;
 	public FlyingReason flyingReason = FlyingReason.REGEN;
 	public ItemType eatMaterial = ItemTypes.AIR;
-	public Path proofFile;
-	private ConfigurationNode config;
-	private HoconConfigurationLoader configLoader;
 	private final List<String> proofs = new ArrayList<>();
 	public boolean isInFight = false;
 	public Task fightTask = null;
@@ -94,44 +85,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	public SpongeNegativityPlayer(Player p) {
 		super(p.getUniqueId());
 		this.p = p;
-
-		NegativityAccount account = getAccount();
-		String uuidString = p.getUniqueId().toString();
-		try {
-			Path userDir = SpongeNegativity.getInstance().getDataFolder().resolve("user");
-			Path proofDir = userDir.resolve("proof");
-			proofFile = proofDir.resolve(uuidString + ".txt");
-			Files.createDirectories(proofDir);
-			Path userFile = userDir.resolve(uuidString + ".yml");
-			config = (configLoader = HoconConfigurationLoader.builder().setPath(userFile).build()).load();
-			ConfigurationNode cheatsNode = config.getNode("cheats");
-			for (Cheat cheat : Cheat.values()) {
-				String cheatId = cheat.getKey().toLowerCase();
-				ConfigurationNode cheatNode = cheatsNode.getNode(cheatId);
-				if (cheatNode.isVirtual()) {
-					cheatNode.setValue(0);
-					account.setWarnCount(cheat, 0);
-				} else {
-					account.setWarnCount(cheat, cheatNode.getInt());
-				}
-			}
-			Minerate minerate = account.getMinerate();
-			ConfigurationNode minerateNode = config.getNode("minerate");
-			for (MinerateType mt : MinerateType.values()) {
-				ConfigurationNode tempNode = minerateNode.getNode(mt.getName().toLowerCase());
-				if (tempNode.isVirtual()) {
-					tempNode.setValue(0);
-					minerate.setMine(mt, 0);
-				} else {
-					minerate.setMine(mt, tempNode.getInt());
-				}
-			}
-			configLoader.save(config);
-		} catch (AccessDeniedException e) {
-			System.out.println("[Negativity - SpongeNegativityPlayer] The access is denied for file: " + e.getFile() + " (specific reason: " + e.getReason() + ")");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void initFmlMods() {
@@ -173,26 +126,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	}
 
 	public void saveData() {
-		NegativityAccount account = getAccount();
-
-		ConfigurationNode cheatsNode = config.getNode("cheats");
-		for (Map.Entry<Cheat, Integer> warn : account.getAllWarns().entrySet()) {
-			String cheatId = warn.getKey().getKey().toLowerCase();
-			cheatsNode.getNode(cheatId).setValue(warn.getValue());
-		}
-
-		ConfigurationNode minerateNode = config.getNode("minerate");
-		for (MinerateType mt : MinerateType.values()) {
-			minerateNode.getNode(mt.getName().toLowerCase()).setValue(account.getMinerate().getMinerateType(mt));
-		}
-
-		config.getNode("lang").setValue(account.getLang());
-		try {
-			configLoader.save(config);
-		} catch (IOException e) {
-			SpongeNegativity.getInstance().getLogger().error("Unable to save data of player " + p.getName(), e);
-		}
-
 		if (!proofs.isEmpty()) {
 			try {
 				Path userDir = SpongeNegativity.getInstance().getDataFolder().resolve("user");
@@ -204,10 +137,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 				SpongeNegativity.getInstance().getLogger().error("Unable to save proofs of player " + p.getName(), e);
 			}
 		}
-	}
-
-	public void updateMinerateInFile() {
-		saveData();
 	}
 
 	public boolean hasBypassTicket(Cheat c) {

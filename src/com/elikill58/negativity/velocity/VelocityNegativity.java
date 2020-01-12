@@ -20,6 +20,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 
@@ -39,11 +40,14 @@ public class VelocityNegativity {
 		return instance;
 	}
 
-    private final ProxyServer server;
-    private final Logger logger;
+
+	private final ProxyServer server;
+	private final Logger logger;
+	private final PluginContainer pluginContainer;
 
     @Inject
-    public VelocityNegativity(ProxyServer server, Logger logger) {
+    public VelocityNegativity(ProxyServer server, Logger logger, PluginContainer pluginContainer) {
+		this.pluginContainer = pluginContainer;
 		instance = this;
 		
         this.server = server;
@@ -57,8 +61,12 @@ public class VelocityNegativity {
     public Logger getLogger() {
     	return logger;
     }
-    
-    @Subscribe
+
+	public PluginContainer getPluginContainer() {
+		return pluginContainer;
+	}
+
+	@Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
     	getLogger().info("Loading Negativity");
 		enableConfig();

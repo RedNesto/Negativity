@@ -18,17 +18,16 @@ public class Minerate {
 		mined.put(type, value);
 	}
 
-	public void addMine(MinerateType type, NegativityPlayer player) {
+	public void addMine(MinerateType type, Object player) {
 		fullMined++;
 		if(type == null)
 			return;
 		mined.put(type, mined.get(type) + 1);
-		player.updateMinerateInFile();
 		int minedType = 0;
 		for(int i : mined.values())
 			minedType += i;
 		int relia = minedType / fullMined;
-		Adapter.getAdapter().alertMod(relia > 80 ? ReportType.VIOLATION : ReportType.WARNING, player.getPlayer(), Cheat.forKey(CheatKeys.XRAY), relia, type.getOreName() + " mined. Full mined: " + fullMined + ". Mined by type: " + toString(), type.getName() + " mined: " + mined.get(type));
+		Adapter.getAdapter().alertMod(relia > 80 ? ReportType.VIOLATION : ReportType.WARNING, player, Cheat.forKey(CheatKeys.XRAY), relia, type.getOreName() + " mined. Full mined: " + fullMined + ". Mined by type: " + toString(), type.getName() + " mined: " + mined.get(type));
 	}
 
 	public Integer getMinerateType(MinerateType type) {

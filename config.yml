@@ -255,6 +255,15 @@ suspect:
   chat: true
   with_report_cmd: true
 
+# Accounts hold player-specific data of the plugin, like their language and alerts count.
+accounts:
+  storage:
+    # The ID of the storage to use.
+    # The following are available out-of-the-box:
+    # - file : stored in files under ./plugins/Negativity/user/
+    # - database : uses a database
+    # Defaults to "file"
+    id: "file"
 
 
 cheats:

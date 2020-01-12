@@ -118,6 +118,8 @@ public class DefaultConfigValue {
 		BOOLEANS.put("ban.file.log_bans", true);
 		BOOLEANS.put("ban.database.log_bans", true);
 
+		STRINGS.put("accounts.storage.id", "file");
+
 		for(String lc : cheats) {
 			INTS.put("cheats." + lc + ".ping", 150);
 			STRINGS.put("cheats." + lc + ".exact_name", lc);
