@@ -11,7 +11,7 @@ public class Database {
 	private static Connection connection;
 	private static String url, username, password;
 	public static boolean hasCustom = false, canBeHigher = false, defaultActive = false, saveInCache = false;
-	public static String column_perm, column_lang, table_perm, table_lang, table_ban;
+	public static String column_perm, column_lang, table_perm, table_lang, table_ban, table_ban_log;
 
 	public static void connect(String url, String username, String password) {
 		Database.url = url;
@@ -65,6 +65,7 @@ public class Database {
 			column_lang = store.getStringInConfig("Database.column_lang");
 			table_lang = store.getStringInConfig("Database.table_lang");
 			table_ban = store.getStringInConfig("Database.table_ban");
+			table_ban_log = store.getStringInConfig("Database.table_ban_log");
 			Database.connect(store.getStringInConfig("Database.url"),
 					store.getStringInConfig("Database.user"),
 					store.getStringInConfig("Database.password"));
