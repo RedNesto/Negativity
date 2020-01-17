@@ -14,8 +14,7 @@ import com.elikill58.negativity.spigot.Messages;
 import com.elikill58.negativity.spigot.SpigotNegativityPlayer;
 import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
-import com.elikill58.negativity.universal.ban.BanRequest;
-import com.elikill58.negativity.universal.ban.BanRequest.BanType;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
 public class BanCommand implements CommandExecutor, TabCompleter {
@@ -76,7 +75,6 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				time = time * 1000;
 			}
 
-			SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(cible);
 			String reason = "";
 			for(String s : arg) {
 				if(s.equalsIgnoreCase(arg[0]) || s.equalsIgnoreCase(arg[1]))
@@ -85,7 +83,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					reason = s;
 				else reason += s;
 			}
-			new BanRequest(np.getAccount(), reason, time, def, BanType.CONSOLE, getFromReason(reason), "admin", false).execute();
+			BanManager.banPlayer(cible.getUniqueId(), reason, "admin", def, com.elikill58.negativity.universal.ban.BanType.CONSOLE, time, getFromReason(reason));
 			Messages.sendMessage(sender, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 			return false;
 		}
@@ -143,7 +141,6 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 			time = time * 1000;
 		}
 
-		SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(cible);
 		String reason = "";
 		for(String s : arg) {
 			if(s.equalsIgnoreCase(arg[0]) || s.equalsIgnoreCase(arg[1]))
@@ -152,7 +149,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				reason = s;
 			else reason += " " + s;
 		}
-		new BanRequest(np.getAccount(), reason, time, def, BanType.MOD, getFromReason(reason), p.getName(), false).execute();
+		BanManager.banPlayer(cible.getUniqueId(), reason, p.getName(), def, com.elikill58.negativity.universal.ban.BanType.MOD, time, getFromReason(reason));
 		if (!sender.equals(cible))
 			Messages.sendMessage(p, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 		return false;
