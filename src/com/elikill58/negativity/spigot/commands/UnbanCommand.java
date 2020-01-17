@@ -15,8 +15,8 @@ import com.elikill58.negativity.spigot.Messages;
 import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.ban.Ban;
-import com.elikill58.negativity.universal.ban.BanRequest;
+import com.elikill58.negativity.universal.ban.BanManager;
+import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class UnbanCommand implements CommandExecutor, TabCompleter {
 
@@ -38,19 +38,20 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
 				Messages.sendMessage(sender, "invalid_player", "%arg%", arg[0]);
 				return false;
 			}
-			NegativityAccount targetAccount = Adapter.getAdapter().getNegativityAccount(cible.getUniqueId());
-			List<BanRequest> brList =  targetAccount.getBanRequest();
-			if(brList.size() == 0) {
-				if(cible.isOnline() || Ban.canConnect(targetAccount))
-					Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
-				else
-					Messages.sendMessage(sender, "unban.not_exact", "%arg%", arg[0]);
+
+			if (!BanManager.isBanned(cible.getUniqueId())) {
+				Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
 				return false;
-			} else
-				for(BanRequest br : brList)
-					br.unban();
-			Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
-			return true;
+			}
+
+			LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId());
+			if (revokedBan != null) {
+				Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
+				return true;
+			} else {
+				// Tell the sender the revocation failed
+				return false;
+			}
 		}
 		Player p = (Player) sender;
 		if(arg.length == 0) {
@@ -67,19 +68,20 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
 			Messages.sendMessage(p, "invalid_player", "%arg%", arg[0]);
 			return false;
 		}
-		NegativityAccount targetAccount = Adapter.getAdapter().getNegativityAccount(cible.getUniqueId());
-		List<BanRequest> brList =  targetAccount.getBanRequest();
-		if(brList.size() == 0) {
-			if(cible.isOnline() || Ban.canConnect(targetAccount))
-				Messages.sendMessage(p, "unban.not_banned", "%name%", cible.getName());
-			else
-				Messages.sendMessage(p, "unban.not_exact", "%arg%", arg[0]);
+
+		if (!BanManager.isBanned(cible.getUniqueId())) {
+			Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
 			return false;
-		} else
-			for(BanRequest br : brList)
-				br.unban();
-		Messages.sendMessage(p, "unban.well_unban", "%name%", cible.getName());
-		return false;
+		}
+
+		LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId());
+		if (revokedBan != null) {
+			Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
+			return true;
+		} else {
+			// Tell the sender the revocation failed
+			return false;
+		}
 	}
 
 	@Override

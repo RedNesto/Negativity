@@ -229,7 +229,7 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {
-		return new NegativityAccount(playerId, TranslatedMessages.getLang(playerId), false, new ArrayList<>());
+		return new NegativityAccount(playerId, TranslatedMessages.getLang(playerId));
 	}
 
 	@Nullable
