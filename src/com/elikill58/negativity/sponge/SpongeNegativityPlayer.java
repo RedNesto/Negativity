@@ -627,7 +627,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 		SpongeNegativityPlayer nPlayer = PLAYERS_CACHE.remove(playerId);
 		if (nPlayer != null) {
 			nPlayer.destroy(isBan);
-			Adapter.getAdapter().getNegativityAccount(playerId).loadBanRequest(true);
 		}
 	}
 

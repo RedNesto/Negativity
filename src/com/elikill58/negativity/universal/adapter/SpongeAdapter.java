@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -319,10 +318,7 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 
 		@Override
 		public NegativityAccount load(UUID playerId) {
-			NegativityAccount account = new NegativityAccount(playerId, TranslatedMessages.getLang(playerId), false, new ArrayList<>());
-
-			account.loadBanRequest();
-			return account;
+			return new NegativityAccount(playerId, TranslatedMessages.getLang(playerId));
 		}
 	}
 
