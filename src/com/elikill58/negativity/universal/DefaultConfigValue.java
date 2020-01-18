@@ -116,6 +116,8 @@ public class DefaultConfigValue {
 		INTS.put("ban.alert_need", 5);
 		STRINGS.put("ban.time.calculator", "360000000 + (%reliability% * 10 * %alert%)");
 		INTS.put("ban.def.ban_time", 4);
+		BOOLEANS.put("ban.file.log_bans", true);
+		BOOLEANS.put("ban.database.log_bans", true);
 
 		for(String lc : cheats) {
 			INTS.put("cheats." + lc + ".ping", 150);
