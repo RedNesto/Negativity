@@ -208,7 +208,7 @@ public class SpigotNegativity extends JavaPlugin {
 			pluginProcessors.add(new AdvancedBanProcessor());
 			getLogger().info("Ban plugin AdvancedBan found ! Loading support ...");
 		}
-		BanManager.registerProcessor("other_plugin", new CompoundBanProcessor(pluginProcessors));
+		BanManager.registerProcessor("external_plugins", new CompoundBanProcessor(pluginProcessors));
 
 	}
 	
