@@ -32,7 +32,7 @@ import com.elikill58.negativity.universal.Database;
 import com.elikill58.negativity.universal.DefaultConfigValue;
 import com.elikill58.negativity.universal.SuspectManager;
 import com.elikill58.negativity.universal.TranslatedMessages;
-import com.elikill58.negativity.universal.ban.Ban;
+import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 
 public class UniversalUtils {
@@ -239,7 +239,7 @@ public class UniversalUtils {
 		DefaultConfigValue.init();
 		Database.init();
 		Perm.init();
-		Ban.init();
+		BanManager.init();
 		SuspectManager.init();
 		TranslatedMessages.init();
 	}
