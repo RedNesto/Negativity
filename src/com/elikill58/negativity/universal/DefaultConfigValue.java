@@ -68,7 +68,6 @@ public class DefaultConfigValue {
 		STRINGS.put("Database.password", "myPassword");
 		STRINGS.put("Database.table_perm", "myTable");
 		STRINGS.put("Database.table_lang", "myTable");
-		STRINGS.put("Database.table_ban", "ban");
 		BOOLEANS.put("Database.saveInCache", true);
 
 		BOOLEANS.put("inventory.alerts.see.no_started_verif_cheat", false);
