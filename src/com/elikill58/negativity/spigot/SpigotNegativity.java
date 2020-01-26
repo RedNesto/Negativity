@@ -61,8 +61,6 @@ import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.adapter.SpigotAdapter;
 import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.ban.BanUtils;
-import com.elikill58.negativity.universal.ban.processor.BanProcessor;
-import com.elikill58.negativity.universal.ban.processor.CompoundBanProcessor;
 import com.elikill58.negativity.universal.ban.support.AdvancedBanProcessor;
 import com.elikill58.negativity.universal.ban.support.BukkitBanProcessor;
 import com.elikill58.negativity.universal.ban.support.MaxBansProcessor;
@@ -178,11 +176,9 @@ public class SpigotNegativity extends JavaPlugin {
 			}
 		});
 
-		List<BanProcessor> pluginProcessors = new ArrayList<>();
+		BanManager.registerProcessor("bukkit", new BukkitBanProcessor());
 		if (Bukkit.getPluginManager().getPlugin("Essentials") != null) {
 			essentialsSupport = true;
-			if(ada.getStringInConfig("ban.other_plugin.plugin_used").equalsIgnoreCase("essentials"))
-				pluginProcessors.add(new BukkitBanProcessor());
 		}
 		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null) {
 			worldGuardSupport = true;
@@ -194,20 +190,18 @@ public class SpigotNegativity extends JavaPlugin {
 					? (worldGuardSupport ? "Essentials and WorldGuard plugins are detected."
 							: "Essentials plugin detected.")
 					: "WorldGuard plugin detected.");
-			getLogger().info(s + " Loading support ..." + (ada.getStringInConfig("ban.other_plugin.plugin_used").equalsIgnoreCase("essentials") && essentialsSupport ? " (Essentials also used as Ban plugin)" : ""));
+			getLogger().info(s + " Loading support ...");
 		}
 
-		if (Bukkit.getPluginManager().getPlugin("MaxBans") != null && ada.getStringInConfig("ban.other_plugin.plugin_used").equalsIgnoreCase("MaxBans")) {
-			pluginProcessors.add(new MaxBansProcessor());
+		if (Bukkit.getPluginManager().getPlugin("MaxBans") != null) {
+			BanManager.registerProcessor("maxbans", new MaxBansProcessor());
 			getLogger().info("Ban plugin MaxBans found ! Loading support ...");
 		}
 
-		if (Bukkit.getPluginManager().getPlugin("AdvancedBan") != null && ada.getStringInConfig("ban.other_plugin.plugin_used").equalsIgnoreCase("AdvancedBan")) {
-			pluginProcessors.add(new AdvancedBanProcessor());
+		if (Bukkit.getPluginManager().getPlugin("AdvancedBan") != null) {
+			BanManager.registerProcessor("advancedban", new AdvancedBanProcessor());
 			getLogger().info("Ban plugin AdvancedBan found ! Loading support ...");
 		}
-		BanManager.registerProcessor("external_plugins", new CompoundBanProcessor(pluginProcessors));
-
 	}
 	
 	private void loadChannelInOut(Messenger messenger, String channel, ChannelEvents event) {
