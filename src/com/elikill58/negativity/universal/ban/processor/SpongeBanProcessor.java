@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.service.ban.BanService;
@@ -24,12 +24,11 @@ import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class SpongeBanProcessor implements BanProcessor {
 
-	@Nullable
 	@Override
-	public ActiveBan executeBan(ActiveBan ban) {
+	public CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
 		BanService banService = Sponge.getServiceManager().provide(BanService.class).orElse(null);
 		if (banService == null) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
 		Instant expirationDate = ban.isDefinitive() ? null : Instant.ofEpochMilli(ban.getExpirationTime());
@@ -49,62 +48,62 @@ public class SpongeBanProcessor implements BanProcessor {
 			player.kickPlayer(ban.getReason(), formattedExpTime, ban.getBannedBy(), ban.isDefinitive());
 		}
 
-		return ban;
+		return CompletableFuture.completedFuture(ban);
 	}
 
-	@Nullable
 	@Override
-	public LoggedBan revokeBan(UUID playerId) {
+	public CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId) {
 		BanService banService = Sponge.getServiceManager().provide(BanService.class).orElse(null);
 		if (banService == null) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
 		GameProfile profile = GameProfile.of(playerId);
 		Optional<Ban.Profile> existingBan = banService.getBanFor(profile);
 		if (!existingBan.isPresent() || !banService.pardon(profile)) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
 		Ban.Profile revokedBan = existingBan.get();
 		String reason = revokedBan.getReason().map(TextSerializers.FORMATTING_CODE::serialize).orElse("");
 		String bannedBy = revokedBan.getBanSource().map(TextSerializers.FORMATTING_CODE::serialize).orElse("");
 		long expirationTime = revokedBan.getExpirationDate().map(Instant::toEpochMilli).orElse(-1L);
-		return new LoggedBan(playerId, reason, bannedBy, BanType.UNKNOW, expirationTime, null, true);
+		LoggedBan revoked = new LoggedBan(playerId, reason, bannedBy, BanType.UNKNOW, expirationTime, null, true);
+		return CompletableFuture.completedFuture(revoked);
 	}
 
 	@Override
-	public boolean isBanned(UUID playerId) {
+	public CompletableFuture<Boolean> isBanned(UUID playerId) {
 		BanService banService = Sponge.getServiceManager().provide(BanService.class).orElse(null);
 		if (banService == null) {
-			return false;
+			return CompletableFuture.completedFuture(false);
 		}
 
-		return banService.isBanned(GameProfile.of(playerId));
+		return CompletableFuture.completedFuture(banService.isBanned(GameProfile.of(playerId)));
 	}
 
-	@Nullable
 	@Override
-	public ActiveBan getActiveBan(UUID playerId) {
+	public CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId) {
 		BanService banService = Sponge.getServiceManager().provide(BanService.class).orElse(null);
 		if (banService == null) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
 		Optional<Ban.Profile> existingBan = banService.getBanFor(GameProfile.of(playerId));
 		if (!existingBan.isPresent()) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
 		Ban.Profile activeBan = existingBan.get();
 		String reason = activeBan.getReason().map(TextSerializers.FORMATTING_CODE::serialize).orElse("");
 		String bannedBy = activeBan.getBanSource().map(TextSerializers.FORMATTING_CODE::serialize).orElse("");
 		long expirationTime = activeBan.getExpirationDate().map(Instant::toEpochMilli).orElse(-1L);
-		return new ActiveBan(playerId, reason, bannedBy, BanType.UNKNOW, expirationTime, null);
+		ActiveBan active = new ActiveBan(playerId, reason, bannedBy, BanType.UNKNOW, expirationTime, null);
+		return CompletableFuture.completedFuture(active);
 	}
 
 	@Override
-	public List<LoggedBan> getLoggedBans(UUID playerId) {
-		return Collections.emptyList();
+	public CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId) {
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 }

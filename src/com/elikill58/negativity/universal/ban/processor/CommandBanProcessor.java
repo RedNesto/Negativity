@@ -3,8 +3,9 @@ package com.elikill58.negativity.universal.ban.processor;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
@@ -22,31 +23,29 @@ public class CommandBanProcessor implements BanProcessor {
 		this.unbanCommands = unbanCommands;
 	}
 
-	@Nullable
 	@Override
-	public ActiveBan executeBan(ActiveBan ban) {
+	public CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
 		Adapter adapter = Adapter.getAdapter();
 		banCommands.forEach(cmd -> adapter.runConsoleCommand(applyPlaceholders(cmd, ban.getPlayerId(), ban.getReason())));
-		return ban;
+		return CompletableFuture.completedFuture(ban);
 	}
 
-	@Nullable
 	@Override
-	public LoggedBan revokeBan(UUID playerId) {
+	public CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId) {
 		Adapter adapter = Adapter.getAdapter();
 		unbanCommands.forEach(cmd -> adapter.runConsoleCommand(applyPlaceholders(cmd, playerId, "Unknown")));
-		return new LoggedBan(playerId, "Unknown", "Unknown", BanType.UNKNOW, 0, null, true);
-	}
-
-	@Nullable
-	@Override
-	public ActiveBan getActiveBan(UUID playerId) {
-		return null;
+		LoggedBan revokedBan = new LoggedBan(playerId, "Unknown", "Unknown", BanType.UNKNOW, 0, null, true);
+		return CompletableFuture.completedFuture(revokedBan);
 	}
 
 	@Override
-	public List<LoggedBan> getLoggedBans(UUID playerId) {
-		return Collections.emptyList();
+	public CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId) {
+		return CompletableFuture.completedFuture(null);
+	}
+
+	@Override
+	public CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId) {
+		return CompletableFuture.completedFuture(Collections.emptyList());
 	}
 
 	private static String applyPlaceholders(String rawCommand, UUID playerId, String reason) {

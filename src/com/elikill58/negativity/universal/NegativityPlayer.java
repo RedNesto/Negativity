@@ -8,7 +8,7 @@ import com.elikill58.negativity.universal.utils.UniversalUtils;
 public abstract class NegativityPlayer {
 
 	private final UUID playerId;
-	private boolean isBanned = false, isMcLeaks = false;
+	private boolean isMcLeaks = false;
 
 	public NegativityPlayer(UUID playerId) {
 		this.playerId = playerId;
@@ -25,14 +25,6 @@ public abstract class NegativityPlayer {
 	
 	public boolean isMcLeaks() {
 		return isMcLeaks;
-	}
-	
-	public boolean isBanned() {
-		return isBanned;
-	}
-	
-	public void setBanned(boolean b) {
-		isBanned = b;
 	}
 
 	public abstract Object getPlayer();

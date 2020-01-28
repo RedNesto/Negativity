@@ -37,12 +37,12 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
 				return false;
 			}
 
-			if (!BanManager.isBanned(cible.getUniqueId())) {
+			if (!BanManager.isBanned(cible.getUniqueId()).join()) {
 				Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
 				return false;
 			}
 
-			LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId());
+			LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId()).join();
 			if (revokedBan != null) {
 				Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
 				return true;
@@ -67,12 +67,12 @@ public class UnbanCommand implements CommandExecutor, TabCompleter {
 			return false;
 		}
 
-		if (!BanManager.isBanned(cible.getUniqueId())) {
+		if (!BanManager.isBanned(cible.getUniqueId()).join()) {
 			Messages.sendMessage(sender, "unban.not_banned", "%name%", cible.getName());
 			return false;
 		}
 
-		LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId());
+		LoggedBan revokedBan = BanManager.revokeBan(cible.getUniqueId()).join();
 		if (revokedBan != null) {
 			Messages.sendMessage(sender, "unban.well_unban", "%name%", cible.getName());
 			return true;

@@ -54,7 +54,7 @@ public class BansMigration {
 				}
 
 				try {
-					List<LoggedBan> loadedBans = banLogsStorage.load(uuid);
+					List<LoggedBan> loadedBans = banLogsStorage.load(uuid).get();
 					LoggedBan extractedActiveBan = getActiveBanFromLoggedBans(loadedBans);
 
 					List<LoggedBan> loggedBansToSave = loadedBans;

@@ -112,7 +112,7 @@ public class NegativityListener implements Listener {
 	@EventHandler
 	public void onPostLogin(PostLoginEvent e) {
 		ProxiedPlayer p = e.getPlayer();
-		ActiveBan activeBan = BanManager.getActiveBan(p.getUniqueId());
+		ActiveBan activeBan = BanManager.getActiveBan(p.getUniqueId()).join();
 		if (activeBan != null) {
 			String kickMsgKey = activeBan.isDefinitive() ? "ban.kick_def" : "ban.kick_time";
 			String formattedExpiration = UniversalUtils.GENERIC_DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(activeBan.getExpirationTime()));

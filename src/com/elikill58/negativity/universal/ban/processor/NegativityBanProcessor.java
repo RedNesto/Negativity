@@ -1,8 +1,9 @@
 package com.elikill58.negativity.universal.ban.processor;
 
 import java.sql.Timestamp;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
@@ -20,21 +21,18 @@ public class NegativityBanProcessor extends BaseNegativityBanProcessor {
 		super(activeBanStorage, banLogsStorage);
 	}
 
-	@Nullable
 	@Override
-	public ActiveBan executeBan(ActiveBan ban) {
+	public CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
 		NegativityPlayer nPlayer = Adapter.getAdapter().getNegativityPlayer(ban.getPlayerId());
 		if (nPlayer != null && Perm.hasPerm(nPlayer, "notBanned"))
-			return null;
+			return CompletableFuture.completedFuture(null);
 
-		ActiveBan executedBan = super.executeBan(ban);
-
-		if (executedBan != null && nPlayer != null) {
-			nPlayer.banEffect();
-			String formattedExpTime = new Timestamp(executedBan.getExpirationTime()).toString().split("\\.", 2)[0];
-			nPlayer.kickPlayer(executedBan.getReason(), formattedExpTime, executedBan.getBannedBy(), executedBan.isDefinitive());
-		}
-
-		return executedBan;
+		return super.executeBan(ban).whenComplete((executedBan, t) -> {
+			if (executedBan != null && nPlayer != null) {
+				nPlayer.banEffect();
+				String formattedExpTime = new Timestamp(executedBan.getExpirationTime()).toString().split("\\.", 2)[0];
+				nPlayer.kickPlayer(executedBan.getReason(), formattedExpTime, executedBan.getBannedBy(), executedBan.isDefinitive());
+			}
+		});
 	}
 }

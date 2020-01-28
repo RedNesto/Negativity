@@ -3,12 +3,10 @@ package com.elikill58.negativity.universal.ban.support;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.bukkit.Bukkit;
-
-import com.elikill58.negativity.spigot.SpigotNegativity;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
@@ -22,63 +20,67 @@ import me.leoko.advancedban.utils.PunishmentType;
 
 public class AdvancedBanProcessor implements BanProcessor {
 
-	@Nullable
 	@Override
-	public ActiveBan executeBan(ActiveBan ban) {
+	public CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
 		NegativityPlayer player = Adapter.getAdapter().getNegativityPlayer(ban.getPlayerId());
 		if (player == null) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
 
-		long endTime = ban.isDefinitive() ? 0 : ban.getExpirationTime();
-		PunishmentType type = ban.isDefinitive() ? PunishmentType.BAN : PunishmentType.TEMP_BAN;
-		Punishment punishment = new Punishment(player.getName(), ban.getPlayerId().toString(), ban.getReason(), ban.getBannedBy(), type, System.currentTimeMillis(), endTime, "", -1);
-		// Must be invoked asynchronously because an async event is thrown in there and Bukkit enforces it
-		Bukkit.getScheduler().runTaskAsynchronously(SpigotNegativity.getInstance(), (Runnable) punishment::create);
+		String playerName = player.getName();
+		return CompletableFuture.supplyAsync(() -> {
+			long endTime = ban.isDefinitive() ? 0 : ban.getExpirationTime();
+			PunishmentType type = ban.isDefinitive() ? PunishmentType.BAN : PunishmentType.TEMP_BAN;
+			Punishment punishment = new Punishment(playerName, ban.getPlayerId().toString(), ban.getReason(), ban.getBannedBy(), type, System.currentTimeMillis(), endTime, "", -1);
+			punishment.create();
 
-		return ban;
-	}
-
-	@Nullable
-	@Override
-	public LoggedBan revokeBan(UUID playerId) {
-		Punishment punishment = PunishmentManager.get().getBan(playerId.toString());
-		if (punishment == null) {
-			return null;
-		}
-
-		// Must be invoked asynchronously because an async event is thrown in there and Bukkit enforces it
-		Bukkit.getScheduler().runTaskAsynchronously(SpigotNegativity.getInstance(), punishment::delete);
-		return loggedBanFrom(playerId, punishment, true);
+			return ban;
+		});
 	}
 
 	@Override
-	public boolean isBanned(UUID playerId) {
-		return PunishmentManager.get().isBanned(playerId.toString());
-	}
+	public CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> {
+			Punishment punishment = PunishmentManager.get().getBan(playerId.toString());
+			if (punishment == null) {
+				return null;
+			}
 
-	@Nullable
-	@Override
-	public ActiveBan getActiveBan(UUID playerId) {
-		Punishment punishment = PunishmentManager.get().getBan(playerId.toString());
-		if (punishment == null) {
-			return null;
-		}
-
-		return new ActiveBan(playerId,
-				punishment.getReason(),
-				punishment.getOperator(),
-				BanType.UNKNOW,
-				punishment.getEnd(),
-				punishment.getReason());
+			punishment.delete();
+			return loggedBanFrom(playerId, punishment, true);
+		});
 	}
 
 	@Override
-	public List<LoggedBan> getLoggedBans(UUID playerId) {
-		List<Punishment> punishments = PunishmentManager.get().getPunishments(playerId.toString(), PunishmentType.BAN, false);
-		List<LoggedBan> loggedBans = new ArrayList<>();
-		punishments.forEach(punishment -> loggedBans.add(loggedBanFrom(playerId, punishment, false)));
-		return loggedBans;
+	public CompletableFuture<Boolean> isBanned(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> PunishmentManager.get().isBanned(playerId.toString()));
+	}
+
+	@Override
+	public CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> {
+			Punishment punishment = PunishmentManager.get().getBan(playerId.toString());
+			if (punishment == null) {
+				return null;
+			}
+
+			return new ActiveBan(playerId,
+					punishment.getReason(),
+					punishment.getOperator(),
+					BanType.UNKNOW,
+					punishment.getEnd(),
+					punishment.getReason());
+		});
+	}
+
+	@Override
+	public CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> {
+			List<Punishment> punishments = PunishmentManager.get().getPunishments(playerId.toString(), PunishmentType.BAN, false);
+			List<LoggedBan> loggedBans = new ArrayList<>();
+			punishments.forEach(punishment -> loggedBans.add(loggedBanFrom(playerId, punishment, false)));
+			return loggedBans;
+		});
 	}
 
 	private LoggedBan loggedBanFrom(UUID playerId, Punishment punishment, boolean revoked) {

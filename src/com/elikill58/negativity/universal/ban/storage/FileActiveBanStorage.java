@@ -8,8 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
@@ -18,47 +21,55 @@ import com.elikill58.negativity.universal.ban.BanType;
 public class FileActiveBanStorage implements ActiveBanStorage {
 
 	private final Path banDir;
+	// Using a single thread ensures this storage only access the ban file once at a time
+	private final Executor fileAccessExecutor = Executors.newSingleThreadExecutor();
 
 	public FileActiveBanStorage(Path banDir) {
-		this.banDir = banDir;}
+		this.banDir = banDir;
+	}
 
-	@Nullable
 	@Override
-	public ActiveBan load(UUID playerId) {
-		Path banFile = banDir.resolve("active.txt");
-		if (Files.notExists(banFile))
-			return null;
+	public CompletableFuture<@Nullable ActiveBan> load(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> {
+			Path banFile = banDir.resolve("active.txt");
+			if (Files.notExists(banFile))
+				return null;
 
-		try (BufferedReader reader = Files.newBufferedReader(banFile)) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				if (line.startsWith(playerId.toString())) {
-					return fromString(line);
+			try (BufferedReader reader = Files.newBufferedReader(banFile)) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					if (line.startsWith(playerId.toString())) {
+						return fromString(line);
+					}
 				}
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
 
-		return null;
+			return null;
+		}, fileAccessExecutor);
 	}
 
 	@Override
-	public void save(ActiveBan ban) {
-		try {
-			replaceBan(ban.getPlayerId(), ban);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+	public CompletableFuture<Void> save(ActiveBan ban) {
+		return CompletableFuture.runAsync(() -> {
+			try {
+				replaceBan(ban.getPlayerId(), ban);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}, fileAccessExecutor);
 	}
 
 	@Override
-	public void remove(UUID playerId) {
-		try {
-			replaceBan(playerId, null);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+	public CompletableFuture<Void> remove(UUID playerId) {
+		return CompletableFuture.runAsync(() -> {
+			try {
+				replaceBan(playerId, null);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}, fileAccessExecutor);
 	}
 
 	/**

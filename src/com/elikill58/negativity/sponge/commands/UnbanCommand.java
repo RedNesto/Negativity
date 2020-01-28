@@ -16,23 +16,23 @@ import org.spongepowered.api.text.Text;
 import com.elikill58.negativity.sponge.Messages;
 import com.elikill58.negativity.sponge.utils.NegativityCmdWrapper;
 import com.elikill58.negativity.universal.ban.BanManager;
-import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class UnbanCommand implements CommandExecutor {
 
 	@Override
 	public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 		User target = args.requireOne("target");
+		String targetName = target.getName();
 
-		LoggedBan revokedBan = BanManager.revokeBan(target.getUniqueId());
-		if (revokedBan != null) {
-			Messages.sendMessage(src, "unban.well_unban", "%name%", target.getName());
-			return CommandResult.success();
-		} else {
-			// TODO tell the sender the user was not unbanned
-			Messages.sendMessage(src, "unban.well_unban", "%name%", target.getName());
-			return CommandResult.empty();
-		}
+		BanManager.revokeBan(target.getUniqueId()).whenComplete((revokedBan, throwable) -> {
+			if (revokedBan != null) {
+				Messages.sendMessage(src, "unban.well_unban", "%name%", targetName);
+			} else {
+				// TODO tell the sender the user was not unbanned
+				Messages.sendMessage(src, "unban.well_unban", "%name%", targetName);
+			}
+		});
+		return CommandResult.success();
 	}
 
 	public static CommandCallable create() {

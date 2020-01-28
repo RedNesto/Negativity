@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.processor.BanProcessor;
@@ -23,29 +24,31 @@ public class BanManager {
 	public static boolean banActive;
 
 	private static String processorId;
-	private static Map<String, BanProcessor> processors = new HashMap<>();
+	private static final Map<String, BanProcessor> processors = new HashMap<>();
 
-	public static List<LoggedBan> getLoggedBans(UUID playerId) {
+	public static CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId) {
 		BanProcessor processor = getProcessor();
-		if (processor == null)
-			return Collections.emptyList();
+		if (processor == null) {
+			return CompletableFuture.completedFuture(Collections.emptyList());
+		}
 
 		return processor.getLoggedBans(playerId);
 	}
 
-	public static boolean isBanned(UUID playerId) {
+	public static CompletableFuture<Boolean> isBanned(UUID playerId) {
 		BanProcessor processor = getProcessor();
-		if (processor == null)
-			return false;
+		if (processor == null) {
+			return CompletableFuture.completedFuture(false);
+		}
 
 		return processor.isBanned(playerId);
 	}
 
-	@Nullable
-	public static ActiveBan getActiveBan(UUID playerId) {
+	public static CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId) {
 		BanProcessor processor = getProcessor();
-		if (processor == null)
-			return null;
+		if (processor == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return processor.getActiveBan(playerId);
 	}
@@ -58,11 +61,11 @@ public class BanManager {
 	 *
 	 * @return the ban that has been executed, or {@code null} if the ban has not been executed.
 	 */
-	@Nullable
-	public static ActiveBan executeBan(ActiveBan ban) {
+	public static CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
 		BanProcessor processor = getProcessor();
-		if (processor == null)
-			return null;
+		if (processor == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return processor.executeBan(ban);
 	}
@@ -78,11 +81,11 @@ public class BanManager {
 	 *
 	 * @return the logged revoked ban or {@code null} if the revocation failed.
 	 */
-	@Nullable
-	public static LoggedBan revokeBan(UUID playerId) {
+	public static CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId) {
 		BanProcessor processor = getProcessor();
-		if (processor == null)
-			return null;
+		if (processor == null) {
+			return CompletableFuture.completedFuture(null);
+		}
 
 		return processor.revokeBan(playerId);
 	}
@@ -93,8 +96,9 @@ public class BanManager {
 
 	@Nullable
 	public static BanProcessor getProcessor() {
-		if (!banActive)
+		if (!banActive) {
 			return null;
+		}
 
 		return processors.get(processorId);
 	}
@@ -106,8 +110,9 @@ public class BanManager {
 	public static void init() {
 		Adapter adapter = Adapter.getAdapter();
 		banActive = adapter.getBooleanInConfig("ban.active");
-		if (!banActive)
+		if (!banActive) {
 			return;
+		}
 
 		processorId = adapter.getStringInConfig("ban.processor");
 

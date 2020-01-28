@@ -7,8 +7,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.BanType;
@@ -16,45 +19,51 @@ import com.elikill58.negativity.universal.ban.LoggedBan;
 
 public class FileBanLogsStorage implements BanLogsStorage {
 
-	private Path storageDir;
+	private final Path storageDir;
+	// Using a single thread ensures log files are accessed once at a time
+	private final Executor fileAccessExecutor = Executors.newSingleThreadExecutor();
 
 	public FileBanLogsStorage(Path storageDir) {
 		this.storageDir = storageDir;
 	}
 
 	@Override
-	public List<LoggedBan> load(UUID playerId) {
-		List<LoggedBan> loadedBans = new ArrayList<>();
+	public CompletableFuture<List<LoggedBan>> load(UUID playerId) {
+		return CompletableFuture.supplyAsync(() -> {
+			List<LoggedBan> loadedBans = new ArrayList<>();
 
-		Path banFile = getLoadBanDir().resolve(playerId + ".txt");
-		if (Files.notExists(banFile)) {
-			return loadedBans;
-		}
-
-		try {
-			for (String line : Files.readAllLines(banFile)) {
-				LoggedBan ban = fromString(playerId, line);
-				if (ban != null) {
-					loadedBans.add(ban);
-				}
+			Path banFile = getLoadBanDir().resolve(playerId + ".txt");
+			if (Files.notExists(banFile)) {
+				return loadedBans;
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
-		return loadedBans;
+			try {
+				for (String line : Files.readAllLines(banFile)) {
+					LoggedBan ban = fromString(playerId, line);
+					if (ban != null) {
+						loadedBans.add(ban);
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			return loadedBans;
+		}, fileAccessExecutor);
 	}
 
 	@Override
-	public void save(LoggedBan ban) {
-		try {
-			Path file = storageDir.resolve(ban.getPlayerId() + ".txt");
-			Files.createDirectories(file.getParent());
+	public CompletableFuture<Void> save(LoggedBan ban) {
+		return CompletableFuture.runAsync(() -> {
+			try {
+				Path file = storageDir.resolve(ban.getPlayerId() + ".txt");
+				Files.createDirectories(file.getParent());
 
-			Files.write(file, (toString(ban) + "\n").getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+				Files.write(file, (toString(ban) + "\n").getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}, fileAccessExecutor);
 	}
 
 	// Used for migrations

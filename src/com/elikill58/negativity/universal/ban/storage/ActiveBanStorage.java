@@ -1,8 +1,9 @@
 package com.elikill58.negativity.universal.ban.storage;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.ban.ActiveBan;
 
@@ -21,20 +22,21 @@ public interface ActiveBanStorage {
 	 *
 	 * @return the active ban of the player, or {@code null} if the player is not banned
 	 */
-	@Nullable
-	ActiveBan load(UUID playerId);
+	CompletableFuture<@Nullable ActiveBan> load(UUID playerId);
 
 	/**
 	 * Saves the given active ban.
 	 *
 	 * @param ban the active ban to save.
+	 * @return
 	 */
-	void save(ActiveBan ban);
+	CompletableFuture<Void> save(ActiveBan ban);
 
 	/**
 	 * Removes the ban associated to the player identified by the given UUID.
 	 *
 	 * @param playerId the UUID of the player
+	 * @return
 	 */
-	void remove(UUID playerId);
+	CompletableFuture<Void> remove(UUID playerId);
 }

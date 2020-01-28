@@ -273,11 +273,11 @@ public class SpongeNegativity {
 	}
 
 	@Listener
-	public void onLogin(ClientConnectionEvent.Login e) {
-		UUID playerId = e.getTargetUser().getUniqueId();
+	public void onAuth(ClientConnectionEvent.Auth e) {
+		UUID playerId = e.getProfile().getUniqueId();
 		SpongeNegativityPlayer.removeFromCache(playerId, false);
 
-		ActiveBan activeBan = BanManager.getActiveBan(playerId);
+		ActiveBan activeBan = BanManager.getActiveBan(playerId).join();
 		if (activeBan != null) {
 			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
 			String kickMsgKey;
@@ -478,10 +478,10 @@ public class SpongeNegativity {
 			if (!kick.isCancelled())
 				p.kick(Messages.getMessage(p, "kick", "%cheat%", c.getName()));
 		}
-		if(np.isBanned())
+		if (BanManager.isBanned(np.getUUID()).join())
 			return false;
 
-		if (BanUtils.banIfNeeded(np, c, reliability) == null) {
+		if (BanUtils.banIfNeeded(np, c, reliability).join() == null) {
 			return false;
 		}
 

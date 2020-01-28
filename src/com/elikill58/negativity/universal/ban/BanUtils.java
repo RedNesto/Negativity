@@ -1,8 +1,11 @@
 package com.elikill58.negativity.universal.ban;
 
-import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.spigot.SpigotNegativity;
 import com.elikill58.negativity.sponge.SpongeNegativity;
@@ -39,18 +42,20 @@ public class BanUtils {
 	 * Basically common code for {@link SpigotNegativity#alertMod} and {@link SpongeNegativity#alertMod}.
 	 * @return see {@link BanManager#executeBan}, null if banning was not needed
 	 */
-	@Nullable
-	public static ActiveBan banIfNeeded(NegativityPlayer player, Cheat cheat, int reliability) {
+	public static CompletableFuture<@Nullable ActiveBan> banIfNeeded(NegativityPlayer player, Cheat cheat, int reliability) {
 		if (!shouldBan(cheat, player, reliability)) {
-			return null;
+			return CompletableFuture.completedFuture(null);
 		}
-		String reason = player.getReason(cheat);
-		int banDuration = -1;
-		int banDefThreshold = Adapter.getAdapter().getIntegerInConfig("ban.def.ban_time");
-		boolean isDefinitive = BanManager.getLoggedBans(player.getUUID()).size() >= banDefThreshold;
-		if (!isDefinitive) {
+
+		return CompletableFuture.supplyAsync(() -> {
+			String reason = player.getReason(cheat);
+			int banDuration = -1;
+			int banDefThreshold = Adapter.getAdapter().getIntegerInConfig("ban.def.ban_time");
+			boolean isDefinitive = BanManager.getLoggedBans(player.getUUID()).join().size() >= banDefThreshold;
+			if (!isDefinitive) {
 			banDuration = BanUtils.computeBanDuration(player, reliability, cheat);
 		}
-		return BanManager.executeBan(new ActiveBan(player.getUUID(), "Cheat (" + reason + ")", "Negativity", BanType.MOD, banDuration, reason));
+		return BanManager.executeBan(new ActiveBan(player.getUUID(), "Cheat (" + reason + ")", "Negativity", BanType.MOD, banDuration, reason)).join();
+		});
 	}
 }

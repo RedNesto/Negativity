@@ -1,9 +1,11 @@
 package com.elikill58.negativity.universal.ban.processor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanManager;
@@ -23,8 +25,7 @@ public interface BanProcessor {
 	 *
 	 * @return the ban that has been executed, or {@code null} if the ban has not been executed.
 	 */
-	@Nullable
-	ActiveBan executeBan(ActiveBan ban);
+	CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban);
 
 	/**
 	 * Revokes the active ban of the player identified by the given UUID.
@@ -37,15 +38,13 @@ public interface BanProcessor {
 	 *
 	 * @return the logged revoked ban or {@code null} if the revocation failed.
 	 */
-	@Nullable
-	LoggedBan revokeBan(UUID playerId);
+	CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId);
 
-	default boolean isBanned(UUID playerId) {
-		return getActiveBan(playerId) != null;
+	default CompletableFuture<Boolean> isBanned(UUID playerId) {
+		return getActiveBan(playerId).thenApply(Objects::nonNull);
 	}
 
-	@Nullable
-	ActiveBan getActiveBan(UUID playerId);
+	CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId);
 
-	List<LoggedBan> getLoggedBans(UUID playerId);
+	CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId);
 }

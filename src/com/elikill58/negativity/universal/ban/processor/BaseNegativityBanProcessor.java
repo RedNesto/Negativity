@@ -3,8 +3,9 @@ package com.elikill58.negativity.universal.ban.processor;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.LoggedBan;
@@ -29,59 +30,61 @@ public class BaseNegativityBanProcessor implements BanProcessor {
 		this.banLogsStorage = banLogsStorage;
 	}
 
-	@Nullable
 	@Override
-	public ActiveBan executeBan(ActiveBan ban) {
-		if (isBanned(ban.getPlayerId())) {
-			return null;
-		}
+	public CompletableFuture<@Nullable ActiveBan> executeBan(ActiveBan ban) {
+		return isBanned(ban.getPlayerId()).thenApplyAsync(isBanned -> {
+			if (isBanned) {
+				return null;
+			}
 
-		activeBanStorage.save(ban);
-		return ban;
-	}
-
-	@Nullable
-	@Override
-	public LoggedBan revokeBan(UUID playerId) {
-		ActiveBan activeBan = activeBanStorage.load(playerId);
-		if (activeBan == null)
-			return null;
-
-		activeBanStorage.remove(playerId);
-		LoggedBan revokedLoggedBan = LoggedBan.from(activeBan, true);
-
-		if (banLogsStorage != null) {
-			banLogsStorage.save(revokedLoggedBan);
-		}
-
-		return revokedLoggedBan;
-	}
-
-	@Nullable
-	@Override
-	public ActiveBan getActiveBan(UUID playerId) {
-		ActiveBan activeBan = activeBanStorage.load(playerId);
-		if (activeBan == null) {
-			return null;
-		}
-
-		long now = System.currentTimeMillis();
-		if (activeBan.isDefinitive() || activeBan.getExpirationTime() > now) {
-			return activeBan;
-		}
-
-		activeBanStorage.remove(playerId);
-		if (banLogsStorage != null) {
-			banLogsStorage.save(LoggedBan.from(activeBan, false));
-		}
-
-		return null;
+			activeBanStorage.save(ban).join();
+			return ban;
+		});
 	}
 
 	@Override
-	public List<LoggedBan> getLoggedBans(UUID playerId) {
+	public CompletableFuture<@Nullable LoggedBan> revokeBan(UUID playerId) {
+		return activeBanStorage.load(playerId).thenApplyAsync(activeBan -> {
+			if (activeBan == null) {
+				return null;
+			}
+
+			activeBanStorage.remove(playerId).join();
+			LoggedBan revokedLoggedBan = LoggedBan.from(activeBan, true);
+
+			if (banLogsStorage != null) {
+				banLogsStorage.save(revokedLoggedBan).join();
+			}
+
+			return revokedLoggedBan;
+		});
+	}
+
+	@Override
+	public CompletableFuture<@Nullable ActiveBan> getActiveBan(UUID playerId) {
+		return activeBanStorage.load(playerId).thenApplyAsync(activeBan -> {
+			if (activeBan == null) {
+				return null;
+			}
+
+			long now = System.currentTimeMillis();
+			if (activeBan.isDefinitive() || activeBan.getExpirationTime() > now) {
+				return activeBan;
+			}
+
+			activeBanStorage.remove(playerId).join();
+			if (banLogsStorage != null) {
+				banLogsStorage.save(LoggedBan.from(activeBan, false)).join();
+			}
+
+			return null;
+		});
+	}
+
+	@Override
+	public CompletableFuture<List<LoggedBan>> getLoggedBans(UUID playerId) {
 		if (banLogsStorage == null) {
-			return Collections.emptyList();
+			return CompletableFuture.completedFuture(Collections.emptyList());
 		}
 		return banLogsStorage.load(playerId);
 	}

@@ -48,7 +48,7 @@ public class PlayersEvents implements Listener {
 		SpigotNegativityPlayer.removeFromCache(playerId, false);
 
 		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
-		ActiveBan activeBan = BanManager.getActiveBan(playerId);
+		ActiveBan activeBan = BanManager.getActiveBan(playerId).join();
 		if (activeBan != null) {
 			String kickMsgKey;
 			String formattedExpiration;

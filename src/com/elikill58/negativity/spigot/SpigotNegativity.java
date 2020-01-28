@@ -344,12 +344,12 @@ public class SpigotNegativity extends JavaPlugin {
 			if (!kick.isCancelled())
 				p.kickPlayer(Messages.getMessage(p, "kick.kicked", "%cheat%", c.getName(), "%reason%", c.getName(), "%playername%", p.getName(), "%cheat%", c.getName()));
 		}
-		if(BanManager.isBanned(np.getUUID())) {
+		if(BanManager.isBanned(np.getUUID()).join()) {
 			Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
 			return false;
 		}
 
-		if (BanUtils.banIfNeeded(np, c, reliability) != null) {
+		if (BanUtils.banIfNeeded(np, c, reliability).join() != null) {
 			Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
 			return false;
 		}
