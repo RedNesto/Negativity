@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import com.elikill58.negativity.spigot.Messages;
 import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
+import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
@@ -82,7 +83,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					reason = s;
 				else reason += s;
 			}
-			BanManager.banPlayer(cible.getUniqueId(), reason, "admin", def, com.elikill58.negativity.universal.ban.BanType.CONSOLE, System.currentTimeMillis() + time, getFromReason(reason));
+			BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, "admin", def, com.elikill58.negativity.universal.ban.BanType.CONSOLE, System.currentTimeMillis() + time, getFromReason(reason)));
 			Messages.sendMessage(sender, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 			return false;
 		}
@@ -148,7 +149,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				reason = s;
 			else reason += " " + s;
 		}
-		BanManager.banPlayer(cible.getUniqueId(), reason, p.getName(), def, com.elikill58.negativity.universal.ban.BanType.MOD, System.currentTimeMillis() + time, getFromReason(reason));
+		BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, p.getName(), def, com.elikill58.negativity.universal.ban.BanType.MOD, System.currentTimeMillis() + time, getFromReason(reason)));
 		if (!sender.equals(cible))
 			Messages.sendMessage(p, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 		return false;
