@@ -35,11 +35,8 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				Messages.sendMessage(sender, "invalid_player", "%arg%", arg[0]);
 				return false;
 			}
-			boolean def = false;
-			long time = 0;
-			if(arg[1].equalsIgnoreCase("def")) {
-				def = true;
-			} else {
+			long time = -1;
+			if (!arg[1].equalsIgnoreCase("def")) {
 				String stringTime = "";
 				for(String c : arg[1].split("")) {
 					if(UniversalUtils.isInteger(c))
@@ -83,7 +80,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					reason = s;
 				else reason += s;
 			}
-			BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, "admin", def, com.elikill58.negativity.universal.ban.BanType.CONSOLE, System.currentTimeMillis() + time, getFromReason(reason)));
+			BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, "admin", com.elikill58.negativity.universal.ban.BanType.CONSOLE, System.currentTimeMillis() + time, getFromReason(reason)));
 			Messages.sendMessage(sender, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 			return false;
 		}
@@ -101,11 +98,8 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 			Messages.sendMessage(p, "invalid_player", "%arg%", arg[0]);
 			return false;
 		}
-		boolean def = false;
-		long time = 0;
-		if(arg[1].equalsIgnoreCase("def")) {
-			def = true;
-		} else {
+		long time = -1;
+		if (!arg[1].equalsIgnoreCase("def")) {
 			String stringTime = "";
 			for(String c : arg[1].split("")) {
 				if(UniversalUtils.isInteger(c))
@@ -149,7 +143,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				reason = s;
 			else reason += " " + s;
 		}
-		BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, p.getName(), def, com.elikill58.negativity.universal.ban.BanType.MOD, System.currentTimeMillis() + time, getFromReason(reason)));
+		BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, p.getName(), com.elikill58.negativity.universal.ban.BanType.MOD, System.currentTimeMillis() + time, getFromReason(reason)));
 		if (!sender.equals(cible))
 			Messages.sendMessage(p, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 		return false;
