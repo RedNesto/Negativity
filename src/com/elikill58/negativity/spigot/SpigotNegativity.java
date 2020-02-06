@@ -7,6 +7,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -294,48 +297,48 @@ public class SpigotNegativity extends JavaPlugin {
 		return INSTANCE;
 	}
 	
-	public static boolean alertMod(ReportType type, Player p, Cheat c, int reliability, String proof) {
+	public static CompletableFuture<Boolean> alertMod(ReportType type, Player p, Cheat c, int reliability, String proof) {
 		return alertMod(type, p, c, reliability, proof, "", "");
 	}
 
-	public static boolean alertMod(ReportType type, Player p, Cheat c, int reliability, String proof,
-			String hover_proof, String stats_send) {
+	public static CompletableFuture<Boolean> alertMod(ReportType type, Player p, Cheat c, int reliability, String proof,
+													  String hover_proof, String stats_send) {
 		if(!c.isActive())
-			return false;
+			return CompletableFuture.completedFuture(false);
 		if(reliability < 55)
-			return false;
+			return CompletableFuture.completedFuture(false);
 		SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(p);
 		if (!np.already_blink && c.equals(Cheat.fromString("BLINK").get())) {
 			np.already_blink = true;
-			return false;
+			return CompletableFuture.completedFuture(false);
 		}
 		if (np.isInFight && c.isBlockedInFight())
-			return false;
+			return CompletableFuture.completedFuture(false);
 		if (c.equals(Cheat.forKey("FLY").get()) && p.hasPermission("essentials.fly") && essentialsSupport && EssentialsSupport.checkEssentialsPrecondition(p))
-			return false;
+			return CompletableFuture.completedFuture(false);
 		if (p.getItemInHand() != null)
 			if (ItemUseBypass.ITEM_BYPASS.containsKey(p.getItemInHand().getType()))
 				if (ItemUseBypass.ITEM_BYPASS.get(p.getItemInHand().getType()).getWhen().equals(WhenBypass.ALWAYS))
-					return false;
+					return CompletableFuture.completedFuture(false);
 		int ping = Utils.getPing(p);
 		long currentTimeMilli = System.currentTimeMillis();
 		if (np.TIME_INVINCIBILITY > currentTimeMilli || reliability < 30 || ping > c.getMaxAlertPing()
 				|| ((double) ((Damageable) p).getHealth()) == 0.0D
 				|| getInstance().getConfig().getInt("tps_alert_stop") > Utils.getLastTPS() || ping < 0 || np.isFreeze)
-			return false;
+			return CompletableFuture.completedFuture(false);
 		Bukkit.getPluginManager().callEvent(new PlayerCheatEvent(p, c, reliability));
 		if (hasBypass && Perm.hasPerm(SpigotNegativityPlayer.getNegativityPlayer(p),
 				"bypass." + c.getKey().toLowerCase())) {
 			PlayerCheatBypassEvent bypassEvent = new PlayerCheatBypassEvent(p, c, reliability);
 			Bukkit.getPluginManager().callEvent(bypassEvent);
 			if (!bypassEvent.isCancelled())
-				return false;
+				return CompletableFuture.completedFuture(false);
 		}
 		PlayerCheatAlertEvent alert = new PlayerCheatAlertEvent(type, p, c, reliability,
 				c.getReliabilityAlert() < reliability, ping, proof, hover_proof, stats_send);
 		Bukkit.getPluginManager().callEvent(alert);
 		if (alert.isCancelled() || !alert.isAlert())
-			return false;
+			return CompletableFuture.completedFuture(false);
 		np.addWarn(c, reliability);
 		logProof(np, type, p, c, reliability, proof, ping);
 		if (c.allowKick() && c.getAlertToKick() <= np.getWarn(c)) {
@@ -344,33 +347,45 @@ public class SpigotNegativity extends JavaPlugin {
 			if (!kick.isCancelled())
 				p.kickPlayer(Messages.getMessage(p, "kick.kicked", "%cheat%", c.getName(), "%reason%", c.getName(), "%playername%", p.getName(), "%cheat%", c.getName()));
 		}
-		if(BanManager.isBanned(np.getUUID()).join()) {
-			Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
-			return false;
-		}
 
-		if (BanUtils.banIfNeeded(np, c, reliability).join() != null) {
-			Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
-			return false;
-		}
-		int timeBetweenTwoAlert = Adapter.getAdapter().getIntegerInConfig("time_between_alert");
-		if(timeBetweenTwoAlert != -1) {
-			HashMap<Cheat, Long> time_alert = (TIME_LAST_CHEAT_ALERT.containsKey(p) ? TIME_LAST_CHEAT_ALERT.get(p) : new HashMap<>());
-			if(time_alert.containsKey(c)) {
-				if(((currentTimeMilli - time_alert.get(c)) < timeBetweenTwoAlert)) {
-					List<PlayerCheatAlertEvent> tempList = np.ALERT_NOT_SHOWED.containsKey(c) ? np.ALERT_NOT_SHOWED.get(c) : new ArrayList<>();
-					tempList.add(alert);
-					np.ALERT_NOT_SHOWED.put(c, tempList);
-					return true;
-				}
+		return CompletableFuture.supplyAsync(() -> {
+			if(BanManager.isBanned(np.getUUID()).join()) {
+				Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
+				return false;
 			}
-			time_alert.put(c, currentTimeMilli);
-			TIME_LAST_CHEAT_ALERT.put(p, time_alert);
-		}
 
-		sendAlertMessage(type, np, p, c, ping, reliability, hover_proof, alert, 1, stats_send);
-		np.ALERT_NOT_SHOWED.remove(c);
-		return true;
+			if (BanUtils.banIfNeeded(np, c, reliability).join() != null) {
+				Stats.updateStats(StatsType.CHEAT, c.getKey(), reliability + "", stats_send);
+				return false;
+			}
+
+			Future<Boolean> bufferedAlertFuture = Bukkit.getScheduler().callSyncMethod(INSTANCE, () -> {
+				int timeBetweenTwoAlert = Adapter.getAdapter().getIntegerInConfig("time_between_alert");
+				if (timeBetweenTwoAlert != -1) {
+					HashMap<Cheat, Long> time_alert = (TIME_LAST_CHEAT_ALERT.containsKey(p) ? TIME_LAST_CHEAT_ALERT.get(p) : new HashMap<>());
+					if (time_alert.containsKey(c)) {
+						if (((currentTimeMilli - time_alert.get(c)) < timeBetweenTwoAlert)) {
+							List<PlayerCheatAlertEvent> tempList = np.ALERT_NOT_SHOWED.containsKey(c) ? np.ALERT_NOT_SHOWED.get(c) : new ArrayList<>();
+							tempList.add(alert);
+							np.ALERT_NOT_SHOWED.put(c, tempList);
+							return true;
+						}
+					}
+					time_alert.put(c, currentTimeMilli);
+					TIME_LAST_CHEAT_ALERT.put(p, time_alert);
+				}
+
+				sendAlertMessage(type, np, p, c, ping, reliability, hover_proof, alert, 1, stats_send);
+				np.ALERT_NOT_SHOWED.remove(c);
+				return true;
+			});
+			try {
+				return bufferedAlertFuture.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				return false;
+			}
+		});
 	}
 
 	public static void sendAlertMessage(ReportType type, SpigotNegativityPlayer np, Player p, Cheat c, int ping, int reliability,
