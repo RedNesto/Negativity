@@ -61,7 +61,7 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 		this.plugin = sn;
 		this.logger = sn.getLogger();
 		this.messagesDir = sn.getDataFolder().resolve("messages");
-		NegativityAccountStorage.setStorage(new SpongeFileNegativityAccountStorage(sn.getDataFolder().resolve("user")));
+		NegativityAccountStorage.register("file", new SpongeFileNegativityAccountStorage(sn.getDataFolder().resolve("user")));
 	}
 
 	@Override

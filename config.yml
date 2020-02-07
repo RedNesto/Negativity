@@ -255,6 +255,10 @@ suspect:
   chat: true
   with_report_cmd: true
 
+# Accounts hold player-specific data of the plugin, like their language and alerts count.
+accounts:
+  storage:
+    id: "file"
 
 
 cheats:
