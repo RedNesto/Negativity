@@ -74,7 +74,7 @@ public class Inv {
 
 		invGrid.set(0, 1, Utils.createItem(ItemTypes.DIAMOND_SWORD, "&rFight: "
 				+ Messages.getStringMessage(p, "inventory.manager." + (np.MODS.size() > 0 ? "enabled" : "disabled"))));
-		invGrid.set(1, 1, Utils.createItem(ItemTypes.DIAMOND_PICKAXE, "&rMinerate", np.mineRate.getInventoryLoreString()));
+		invGrid.set(1, 1, Utils.createItem(ItemTypes.DIAMOND_PICKAXE, "&rMinerate", np.getAccount().getMinerate().getInventoryLoreString()));
 		invGrid.set(2, 1, Utils.createItem(ItemTypes.GRASS, "&rMods", "&7Forge: "
 				+ Messages.getStringMessage(p, "inventory.manager." + (np.MODS.size() > 0 ? "enabled" : "disabled"))));
 		invGrid.set(3, 1, getMcLeaksIndicator(p, np));
