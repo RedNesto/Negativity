@@ -70,7 +70,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 						stringTime = "";
 					}
 				}
-				time = time * 1000;
+				time = System.currentTimeMillis() + time * 1000;
 			}
 
 			String reason = "";
@@ -81,7 +81,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					reason = s;
 				else reason += s;
 			}
-			BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, "admin", BanType.CONSOLE, System.currentTimeMillis() + time, getFromReason(reason)));
+			BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, "admin", BanType.CONSOLE, time, getFromReason(reason)));
 			Messages.sendMessage(sender, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 			return false;
 		}
@@ -133,7 +133,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 					stringTime = "";
 				}
 			}
-			time = time * 1000;
+			time = System.currentTimeMillis() + time * 1000;
 		}
 
 		String reason = "";
@@ -144,7 +144,7 @@ public class BanCommand implements CommandExecutor, TabCompleter {
 				reason = s;
 			else reason += " " + s;
 		}
-		BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, p.getName(), BanType.MOD, System.currentTimeMillis() + time, getFromReason(reason)));
+		BanManager.executeBan(new ActiveBan(cible.getUniqueId(), reason, p.getName(), BanType.MOD, time, getFromReason(reason)));
 		if (!sender.equals(cible))
 			Messages.sendMessage(p, "ban.well_ban", "%name%", cible.getName(), "%reason%", reason);
 		return false;
