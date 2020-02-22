@@ -47,7 +47,6 @@ public class PlayersEvents implements Listener {
 		UUID playerId = e.getPlayer().getUniqueId();
 		SpigotNegativityPlayer.removeFromCache(playerId);
 
-		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
 		ActiveBan activeBan = BanManager.getActiveBan(playerId);
 		if (activeBan != null) {
 			String kickMsgKey;
@@ -61,7 +60,7 @@ public class PlayersEvents implements Listener {
 				formattedExpiration = UniversalUtils.GENERIC_DATE_TIME_FORMATTER.format(expirationDateTime);
 			}			e.setResult(Result.KICK_BANNED);
 			e.setKickMessage(Messages.getMessage(e.getPlayer(), kickMsgKey, "%reason%", activeBan.getReason(), "%time%", formattedExpiration, "%by%", activeBan.getBannedBy()));
-			Adapter.getAdapter().invalidateAccount(account.getPlayerId());
+			Adapter.getAdapter().invalidateAccount(playerId);
 		}
 	}
 
