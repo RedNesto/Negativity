@@ -280,7 +280,6 @@ public class SpongeNegativity {
 
 		ActiveBan activeBan = BanManager.getActiveBan(playerId);
 		if (activeBan != null) {
-			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
 			String kickMsgKey;
 			String formattedExpiration;
 			if (activeBan.isDefinitive()) {
@@ -292,7 +291,9 @@ public class SpongeNegativity {
 				formattedExpiration = UniversalUtils.GENERIC_DATE_TIME_FORMATTER.format(expirationDateTime);
 			}
 			e.setCancelled(true);
+			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
 			e.setMessage(Messages.getMessage(account, kickMsgKey, "%reason%", activeBan.getReason(), "%time%" , formattedExpiration, "%by%", activeBan.getBannedBy()));
+			Adapter.getAdapter().invalidateAccount(playerId);
 		}
 	}
 
