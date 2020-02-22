@@ -24,6 +24,8 @@ public class NegativityMessagesManager {
 		messages.put(ProxyPingMessage.MESSAGE_ID, ProxyPingMessage::new);
 		messages.put(ReportMessage.MESSAGE_ID, ReportMessage::new);
 		messages.put(ClientModsListMessage.MESSAGE_ID, ClientModsListMessage::new);
+		messages.put(UpdateAccountRequestMessage.MESSAGE_ID, UpdateAccountRequestMessage::new);
+		messages.put(UpdateAccountMessage.MESSAGE_ID, UpdateAccountMessage::new);
 		MESSAGES_BY_ID = Collections.unmodifiableMap(messages);
 	}
 

@@ -10,13 +10,17 @@ import java.util.logging.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
+import com.elikill58.negativity.spigot.SpigotAccountSync;
 import com.elikill58.negativity.spigot.SpigotNegativity;
 import com.elikill58.negativity.spigot.SpigotNegativityPlayer;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
 import com.elikill58.negativity.universal.pluginMessages.ClientModsListMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ProxyPingMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 
 public class ChannelEvents implements PluginMessageListener {
 
@@ -50,12 +54,17 @@ public class ChannelEvents implements PluginMessageListener {
 			log.warning("A bungeecord system have been detected, nut not written in configuration. Editing config ...");
 			SpigotNegativity.isOnBungeecord = true;
 			Adapter.getAdapter().set("hasBungeecord", true);
+			NegativityAccountStorage.setProxySync(true);
 			log.warning("Configuration well edited !");
 		} else if (message instanceof ClientModsListMessage) {
 			ClientModsListMessage modsMessage = (ClientModsListMessage) message;
 			SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(p);
 			np.MODS.clear();
 			np.MODS.putAll(modsMessage.getMods());
+		} else if (message instanceof UpdateAccountMessage) {
+			UpdateAccountMessage updateMessage = (UpdateAccountMessage) message;
+			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(updateMessage.getPlayerId());
+			SpigotAccountSync.applyUpdate(p, account, updateMessage.getAccount(), updateMessage.getAffectedFields());
 		} else {
 			SpigotNegativity.getInstance().getLogger().warning("Received unexpected plugin message " + message.getClass().getName());
 		}

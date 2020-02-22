@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +85,13 @@ import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.ban.BanUtils;
 import com.elikill58.negativity.universal.ban.processor.SpongeBanProcessor;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
+import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 import com.google.inject.Inject;
 
@@ -226,6 +230,7 @@ public class SpongeNegativity {
 		loadCommands(false);
 
 		channel = Sponge.getChannelRegistrar().createRawChannel(this, NegativityMessagesManager.CHANNEL_ID);
+		channel.addListener(new NegativityChannelListener());
 		if (Sponge.getChannelRegistrar().isChannelAvailable("FML|HS")) {
 			fmlChannel = Sponge.getChannelRegistrar().getOrCreateRaw(this, "FML|HS");
 			fmlChannel.addListener(new FmlRawDataListener());
@@ -301,6 +306,11 @@ public class SpongeNegativity {
 	public void onJoin(ClientConnectionEvent.Join e, @First Player p) {
 		if (UniversalUtils.isMe(p.getUniqueId()))
 			p.sendMessage(Text.builder("Ce serveur utilise Negativity ! Waw :')").color(TextColors.GREEN).build());
+
+		Task.builder()
+				.delayTicks(5)
+				.execute(() -> SpongeAccountSync.requestAllFields(p))
+				.submit(this);
 		SpongeNegativityPlayer np = SpongeNegativityPlayer.getNegativityPlayer(p);
 		np.TIME_INVINCIBILITY = System.currentTimeMillis() + 8000;
 		Task.builder().delayTicks(20).execute(new Runnable() {
@@ -366,8 +376,10 @@ public class SpongeNegativity {
 
 	@Listener
 	public void onBlockBreak(ChangeBlockEvent.Break e, @First Player p) {
-		String blockId = e.getTransactions().get(0).getOriginal().getState().getType().getId();
-		SpongeNegativityPlayer.getNegativityPlayer(p).mineRate.addMine(MinerateType.fromId(blockId), p);
+		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(p.getUniqueId());
+		MinerateType minerateType = MinerateType.fromId(e.getTransactions().get(0).getOriginal().getState().getType().getId());
+		account.getMinerate().addMine(minerateType, p);
+		SpongeAccountSync.sendFieldUpdate(p, account, EnumSet.of(UpdateAccountMessage.AccountField.MINERATE));
 	}
 
 	public void loadConfig() {
@@ -386,6 +398,8 @@ public class SpongeNegativity {
 			log = config.getNode("log_alerts").getBoolean();
 			isOnBungeecord = config.getNode("hasBungeecord").getBoolean();
 			hasBypass = config.getNode("Permissions").getNode("bypass").getNode("active").getBoolean();
+
+			NegativityAccountStorage.setProxySync(SpongeNegativity.isOnBungeecord);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -451,7 +465,7 @@ public class SpongeNegativity {
 				if (ItemUseBypass.ITEM_BYPASS.get(p.getItemInHand(HandTypes.MAIN_HAND).get().getType()).getWhen()
 						.equals(WhenBypass.ALWAYS))
 					return false;
-		
+
 		int ping = Utils.getPing(p);
 		long timeMillis = System.currentTimeMillis();
 		if (np.TIME_INVINCIBILITY > timeMillis || reliability < 30 || ping > c.getMaxAlertPing()
@@ -474,13 +488,14 @@ public class SpongeNegativity {
 		if (alert.isCancelled() || !alert.isAlert())
 			return false;
 		np.addWarn(c);
+		SpongeAccountSync.sendFieldUpdate(p, np.getAccount(), EnumSet.of(UpdateAccountMessage.AccountField.WARNS));
 		if (c.allowKick() && c.getAlertToKick() <= np.getWarn(c)) {
 			PlayerCheatEvent.Kick kick = new PlayerCheatEvent.Kick(type, p, c, reliability, hover_proof, ping);
 			Sponge.getEventManager().post(kick);
 			if (!kick.isCancelled())
 				p.kick(Messages.getMessage(p, "kick", "%cheat%", c.getName()));
 		}
-		if(np.isBanned())
+		if (np.isBanned())
 			return false;
 
 		if (BanUtils.banIfNeeded(np, c, reliability) == null) {
@@ -609,6 +624,32 @@ public class SpongeNegativity {
 			HashMap<String, String> playerMods = SpongeNegativityPlayer.getNegativityPlayer(player).MODS;
 			playerMods.clear();
 			playerMods.putAll(Utils.getModsNameVersionFromMessage(new String(rawData, StandardCharsets.UTF_8)));
+		}
+	}
+
+	private static class NegativityChannelListener implements RawDataListener {
+
+		@Override
+		public void handlePayload(ChannelBuf data, RemoteConnection connection, Type side) {
+			NegativityMessage message;
+			try {
+				byte[] messageData = data.readBytes(data.available());
+				message = NegativityMessagesManager.readMessage(messageData);
+				if (message == null) {
+					SpongeNegativity.getInstance().getLogger().warn("Received unknown plugin message. Channel {} sent by {}.", channel, connection);
+					return;
+				}
+			} catch (IOException e) {
+				SpongeNegativity.getInstance().getLogger().error("Could not read plugin message.", e);
+				return;
+			}
+
+			if (message instanceof UpdateAccountMessage) {
+				UpdateAccountMessage updateMessage = (UpdateAccountMessage) message;
+				NegativityAccount account = Adapter.getAdapter().getNegativityAccount(updateMessage.getPlayerId());
+				Sponge.getServer().getPlayer(account.getPlayerId()).ifPresent(player ->
+						SpongeAccountSync.applyUpdate(player, account, updateMessage.getAccount(), updateMessage.getAffectedFields()));
+			}
 		}
 	}
 }

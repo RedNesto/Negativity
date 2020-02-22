@@ -214,6 +214,9 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 		SpigotNegativity.log = getBooleanInConfig("log_alerts");
 		SpigotNegativity.log_console = getBooleanInConfig("log_alerts_in_console");
 		SpigotNegativity.hasBypass = getBooleanInConfig("Permissions.bypass.active");
+
+		NegativityAccountStorage.setProxySync(SpigotNegativity.isOnBungeecord);
+
 		//Bukkit.getScheduler().cancelAllTasks();
         /*Bukkit.getPluginManager().disablePlugin(sn);
         Bukkit.getPluginManager().enablePlugin(sn);*/

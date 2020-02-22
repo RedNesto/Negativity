@@ -263,6 +263,8 @@ public class SpongeAdapter extends Adapter implements TranslationProviderFactory
 		SpongeNegativity.isOnBungeecord = getBooleanInConfig("hasBungeecord");
 		SpongeNegativity.log = getBooleanInConfig("log_alerts");
 		SpongeNegativity.hasBypass = getBooleanInConfig("Permissions.bypass.active");
+
+		NegativityAccountStorage.setProxySync(SpongeNegativity.isOnBungeecord);
 	}
 
 	@Override

@@ -15,6 +15,8 @@ public abstract class NegativityAccountStorage {
 	private static final Map<String, NegativityAccountStorage> storages = new HashMap<>();
 	private static String storageId;
 
+	private static boolean proxySync = false;
+
 	@Nullable
 	public abstract NegativityAccount loadAccount(UUID playerId);
 
@@ -31,7 +33,15 @@ public abstract class NegativityAccountStorage {
 		return createdAccount;
 	}
 
+	/**
+	 * @return the storage to use, usually the one selected in the configuration.
+	 * 		May be null if accounts are not persistent or are synced with the proxy.
+	 */
+	@Nullable
 	public static NegativityAccountStorage getStorage() {
+		if (proxySync) {
+			return null;
+		}
 		return storages.get(storageId);
 	}
 
@@ -45,6 +55,14 @@ public abstract class NegativityAccountStorage {
 
 	public static void setStorageId(String storageId) {
 		NegativityAccountStorage.storageId = storageId;
+	}
+
+	public static boolean isProxySync() {
+		return proxySync;
+	}
+
+	public static void setProxySync(boolean proxySync) {
+		NegativityAccountStorage.proxySync = proxySync;
 	}
 
 	public static void init() {

@@ -38,6 +38,7 @@ import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ProxyPingMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
 public class PlayersEvents implements Listener {
@@ -139,6 +140,8 @@ public class PlayersEvents implements Listener {
 	@EventHandler
 	public void onBlockBreakEvent(BlockBreakEvent e) {
 		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(e.getPlayer().getUniqueId());
-		account.getMinerate().addMine(MinerateType.getMinerateType(e.getBlock().getType().name()), e.getPlayer());
+		MinerateType minerateType = MinerateType.getMinerateType(e.getBlock().getType().name());
+		account.getMinerate().addMine(minerateType, e.getPlayer());
+		SpigotNegativity.sendAccountUpdate(e.getPlayer(), account, UpdateAccountMessage.AccountField.MINERATE);
 	}
 }

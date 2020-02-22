@@ -3,10 +3,15 @@ package com.elikill58.negativity.bungee;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import com.elikill58.negativity.universal.BaseAccountSync;
+import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.ban.ActiveBan;
 import com.elikill58.negativity.universal.ban.BanManager;
 import com.elikill58.negativity.universal.permissions.Perm;
@@ -16,6 +21,8 @@ import com.elikill58.negativity.universal.pluginMessages.NegativityMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ProxyPingMessage;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountRequestMessage;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
 import net.md_5.bungee.api.ChatColor;
@@ -105,6 +112,19 @@ public class NegativityListener implements Listener {
 				}
 			if (!hasPermitted) {
 				NegativityListener.report.add(new Report("/server " + player.getServer().getInfo().getName(), place));
+			}
+		} else if (message instanceof UpdateAccountMessage) {
+			UpdateAccountMessage updateMessage = (UpdateAccountMessage) message;
+			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(updateMessage.getPlayerId());
+			BaseAccountSync.applyUpdate(account, updateMessage.getAccount(), updateMessage.getAffectedFields(), Collections.emptySet(), true);
+		} else if (message instanceof UpdateAccountRequestMessage) {
+			UUID playerId = ((UpdateAccountRequestMessage) message).getPlayerId();
+			NegativityAccount account = Adapter.getAdapter().getNegativityAccount(playerId);
+			try {
+				byte[] messageData = NegativityMessagesManager.writeMessage(new UpdateAccountMessage(account));
+				player.getServer().sendData(NegativityMessagesManager.CHANNEL_ID, messageData);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		} else {
 			BungeeNegativity.getInstance().getLogger().log(Level.WARNING, "Unhandled plugin message %s.", message.getClass());

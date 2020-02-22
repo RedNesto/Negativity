@@ -6,8 +6,11 @@ import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -53,6 +56,7 @@ import com.elikill58.negativity.universal.CheatKeys;
 import com.elikill58.negativity.universal.Database;
 import com.elikill58.negativity.universal.ItemUseBypass;
 import com.elikill58.negativity.universal.ItemUseBypass.WhenBypass;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.Stats;
 import com.elikill58.negativity.universal.Stats.StatsType;
@@ -66,10 +70,12 @@ import com.elikill58.negativity.universal.ban.BanUtils;
 import com.elikill58.negativity.universal.ban.support.AdvancedBanProcessor;
 import com.elikill58.negativity.universal.ban.support.BukkitBanProcessor;
 import com.elikill58.negativity.universal.ban.support.MaxBansProcessor;
+import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
 import com.elikill58.negativity.universal.permissions.Perm;
 import com.elikill58.negativity.universal.pluginMessages.AlertMessage;
 import com.elikill58.negativity.universal.pluginMessages.NegativityMessagesManager;
 import com.elikill58.negativity.universal.pluginMessages.ReportMessage;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 import com.elikill58.negativity.universal.utils.UniversalUtils;
 
 @SuppressWarnings("deprecation")
@@ -125,6 +131,8 @@ public class SpigotNegativity extends JavaPlugin {
 		log = ada.getBooleanInConfig("log_alerts");
 		log_console = ada.getBooleanInConfig("log_alerts_in_console");
 		hasBypass = ada.getBooleanInConfig("Permissions.bypass.active");
+
+		NegativityAccountStorage.setProxySync(SpigotNegativity.isOnBungeecord);
 
 		new Metrics(this)
 				.addCustomChart(new Metrics.SimplePie("custom_permission", () -> String.valueOf(Database.hasCustom)));
@@ -343,6 +351,7 @@ public class SpigotNegativity extends JavaPlugin {
 		if (alert.isCancelled() || !alert.isAlert())
 			return false;
 		np.addWarn(c, reliability);
+		sendAccountUpdate(p, np.getAccount(), UpdateAccountMessage.AccountField.WARNS);
 		logProof(np, type, p, c, reliability, proof, ping);
 		if (c.allowKick() && c.getAlertToKick() <= np.getWarn(c)) {
 			PlayerCheatKickEvent kick = new PlayerCheatKickEvent(p, c, reliability);
@@ -455,6 +464,23 @@ public class SpigotNegativity extends JavaPlugin {
 			}
 		if (needPacket && !SpigotNegativityPlayer.INJECTED.contains(p.getUniqueId()))
 			SpigotNegativityPlayer.INJECTED.add(p.getUniqueId());
+	}
+
+	public static void sendAccountUpdate(Player player, NegativityAccount account, UpdateAccountMessage.AccountField... fields) {
+		Set<UpdateAccountMessage.AccountField> affectedFields;
+		if (fields.length == 0) {
+			affectedFields = EnumSet.allOf(UpdateAccountMessage.AccountField.class);
+		} else {
+			affectedFields = EnumSet.copyOf(Arrays.asList(fields));
+		}
+
+		UpdateAccountMessage message = new UpdateAccountMessage(account, affectedFields);
+		try {
+			byte[] messageData = NegativityMessagesManager.writeMessage(message);
+			player.sendPluginMessage(SpigotNegativity.getInstance(), NegativityMessagesManager.CHANNEL_ID, messageData);
+		} catch (IOException e) {
+			SpigotNegativity.getInstance().getLogger().log(Level.SEVERE, "Could not send an account update.", e);
+		}
 	}
 
 	private Object getPrivateField(Object object, String field)
