@@ -28,6 +28,8 @@ import com.elikill58.negativity.sponge.SpongeNegativityPlayer;
 import com.elikill58.negativity.sponge.timers.ActualizerTimer;
 import com.elikill58.negativity.sponge.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
+import com.elikill58.negativity.universal.NegativityAccount;
+import com.elikill58.negativity.universal.adapter.Adapter;
 
 public class InventoryClickManagerEvent {
 
@@ -153,9 +155,12 @@ public class InventoryClickManagerEvent {
 				delayedInvClose(p);
 			else if (m.equals(ItemTypes.ARROW))
 				delayed(() -> Inv.openCheckMenu(p, Inv.CHECKING.get(p)));
-			else if (m.equals(ItemTypes.BONE))
-				for (Cheat c : Cheat.values())
-					SpongeNegativityPlayer.getNegativityPlayer(Inv.CHECKING.get(p)).setWarn(c, 0);
+			else if (m.equals(ItemTypes.BONE)) {
+				NegativityAccount account = Adapter.getAdapter().getNegativityAccount(Inv.CHECKING.get(p).getUniqueId());
+				for (Cheat c : Cheat.values()) {
+					account.setWarnCount(c, 0);
+				}
+			}
 		} else if (invId.equals(Inv.FORGE_MODS_INV_ID)) {
 			e.setCancelled(true);
 		} else if (invId.equals(Inv.CHEAT_MANAGER_INV_ID)) {

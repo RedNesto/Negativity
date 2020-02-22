@@ -1,5 +1,6 @@
 package com.elikill58.negativity.sponge.commands;
 
+import java.util.EnumSet;
 import java.util.function.Function;
 
 import org.spongepowered.api.command.CommandCallable;
@@ -13,9 +14,12 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
 import com.elikill58.negativity.sponge.Messages;
-import com.elikill58.negativity.sponge.SpongeNegativityPlayer;
+import com.elikill58.negativity.sponge.SpongeAccountSync;
 import com.elikill58.negativity.sponge.utils.NegativityCmdWrapper;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 
 public class LangCommand implements CommandExecutor {
 
@@ -26,9 +30,9 @@ public class LangCommand implements CommandExecutor {
 		}
 
 		String language = args.requireOne("language");
-		SpongeNegativityPlayer nPlayer = SpongeNegativityPlayer.getNegativityPlayer((Player) src);
-		nPlayer.getAccount().setLang(language);
-		nPlayer.saveData();
+		NegativityAccount account = Adapter.getAdapter().getNegativityAccount(((Player) src).getUniqueId());
+		account.setLang(language);
+		SpongeAccountSync.sendFieldUpdate((Player) src, account, EnumSet.of(UpdateAccountMessage.AccountField.LANGUAGE));
 
 		Messages.sendMessage(src, "lang.language_set");
 

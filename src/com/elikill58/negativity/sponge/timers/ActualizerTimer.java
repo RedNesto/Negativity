@@ -1,5 +1,6 @@
 package com.elikill58.negativity.sponge.timers;
 
+import java.util.EnumSet;
 import java.util.function.Consumer;
 
 import org.spongepowered.api.entity.living.player.Player;
@@ -7,10 +8,13 @@ import org.spongepowered.api.item.inventory.Container;
 import org.spongepowered.api.item.inventory.property.Identifiable;
 import org.spongepowered.api.scheduler.Task;
 
+import com.elikill58.negativity.sponge.SpongeAccountSync;
 import com.elikill58.negativity.sponge.Inv;
 import com.elikill58.negativity.sponge.SpongeNegativityPlayer;
 import com.elikill58.negativity.sponge.utils.Utils;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.adapter.Adapter;
+import com.elikill58.negativity.universal.pluginMessages.UpdateAccountMessage;
 
 public class ActualizerTimer implements Consumer<Task> {
 
@@ -36,8 +40,11 @@ public class ActualizerTimer implements Consumer<Task> {
                 }
             }
 
-            if(np.BETTER_CLICK < np.ACTUAL_CLICK)
-                np.BETTER_CLICK = np.ACTUAL_CLICK;
+            NegativityAccount account = np.getAccount();
+            if (account.getMostClicksPerSecond() < np.ACTUAL_CLICK) {
+                account.setMostClicksPerSecond(np.ACTUAL_CLICK);
+				SpongeAccountSync.sendFieldUpdate(p, account, EnumSet.of(UpdateAccountMessage.AccountField.MOST_CLICKS_PER_SECOND));
+			}
 
             np.LAST_CLICK = np.ACTUAL_CLICK;
             np.ACTUAL_CLICK = 0;

@@ -7,8 +7,9 @@ import org.bukkit.entity.Player;
 
 import com.elikill58.negativity.spigot.Messages;
 import com.elikill58.negativity.spigot.SpigotNegativity;
-import com.elikill58.negativity.spigot.SpigotNegativityPlayer;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.TranslatedMessages;
+import com.elikill58.negativity.universal.adapter.Adapter;
 
 public class LangCommand implements CommandExecutor {
 
@@ -35,7 +36,8 @@ public class LangCommand implements CommandExecutor {
 					return false;
 				}
 				if (TranslatedMessages.activeTranslation) {
-					SpigotNegativityPlayer.getNegativityPlayer(p).setLang(lang);
+					NegativityAccount account = Adapter.getAdapter().getNegativityAccount(p.getUniqueId());
+					account.setLang(lang);
 				} else {
 					TranslatedMessages.DEFAULT_LANG = lang;
 					SpigotNegativity.getInstance().getConfig().set("Translation.default", lang);

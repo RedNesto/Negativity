@@ -45,7 +45,6 @@ import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.Version;
 import com.elikill58.negativity.universal.adapter.Adapter;
-import com.elikill58.negativity.universal.dataStorage.NegativityAccountStorage;
 
 public class SpigotNegativityPlayer extends NegativityPlayer {
 
@@ -124,12 +123,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			}
 		}
 	}
-	
-	public void setBetterClick(int click) {
-		NegativityAccount account = getAccount();
-		account.setMostClicksPerSecond(click);
-		NegativityAccountStorage.getStorage().saveAccount(account);
-	}
 
 	@Deprecated
 	public void addWarn(Cheat c) {
@@ -141,19 +134,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			return;
 		NegativityAccount account = getAccount();
 		account.setWarnCount(c, account.getWarn(c) + 1);
-		NegativityAccountStorage.getStorage().saveAccount(account);
-	}
-
-	public void setWarn(Cheat c, int cheats) {
-		NegativityAccount account = getAccount();
-		account.setWarnCount(c, cheats);
-		NegativityAccountStorage.getStorage().saveAccount(account);
-	}
-	
-	public void setLang(String newLang) {
-		NegativityAccount account = getAccount();
-		account.setLang(newLang);
-		NegativityAccountStorage.getStorage().saveAccount(account);
 	}
 
 	public void clearPackets() {
