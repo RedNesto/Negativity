@@ -43,6 +43,7 @@ import com.elikill58.negativity.universal.CheatKeys;
 import com.elikill58.negativity.universal.FlyingReason;
 import com.elikill58.negativity.universal.Minerate;
 import com.elikill58.negativity.universal.Minerate.MinerateType;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
 import com.elikill58.negativity.universal.Version;
@@ -55,7 +56,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public static ArrayList<UUID> INJECTED = new ArrayList<>();
 	public ArrayList<Cheat> ACTIVE_CHEAT = new ArrayList<>();
 	public ArrayList<FakePlayer> FAKE_PLAYER = new ArrayList<>();
-	public HashMap<Cheat, Integer> WARNS = new HashMap<>();
 	public HashMap<String, String> MODS = new HashMap<>();
 	public HashMap<String, Double> jesusLastY = new HashMap<>();
 	public HashMap<Cheat, List<PlayerCheatAlertEvent>> ALERT_NOT_SHOWED = new HashMap<>();
@@ -65,7 +65,7 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public int FLYING = 0, MAX_FLYING = 0, POSITION_LOOK = 0, KEEP_ALIVE = 0, POSITION = 0, BLOCK_PLACE = 0,
 			BLOCK_DIG = 0, ARM = 0, USE_ENTITY = 0, ENTITY_ACTION = 0, ALL = 0;
 	// warns & other
-	public int ONLY_KEEP_ALIVE = 0, NO_PACKET = 0, BETTER_CLICK = 0, LAST_CLICK = 0, ACTUAL_CLICK = 0, SEC_ACTIVE = 0;
+	public int ONLY_KEEP_ALIVE = 0, NO_PACKET = 0, LAST_CLICK = 0, ACTUAL_CLICK = 0, SEC_ACTIVE = 0;
 	// setBack
 	public int NO_FALL_DAMAGE = 0, BYPASS_SPEED = 0, IS_LAST_SEC_BLINK = 0, LAST_SLOT_CLICK = -1, LAST_CHAT_MESSAGE_NB = 0;
 	public double lastYDiff = -3.141592654;
@@ -83,7 +83,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public double lastSpiderDistance;
 	public File directory, configFile;
 	public List<String> proof = new ArrayList<>();
-	public Minerate mineRate;
 	public boolean isInFight = false;
 	public BukkitTask fightTask = null;
 	public int fakePlayerTouched = 0;
@@ -92,7 +91,7 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public SpigotNegativityPlayer(Player p) {
 		super(p.getUniqueId());
 		this.p = new WeakReference<>(p);
-		this.mineRate = new Minerate(this);
+		NegativityAccount account = getAccount();
 		File directory = new File(SpigotNegativity.getInstance().getDataFolder().getAbsolutePath() + File.separator
 				+ "user" + File.separator + "proof" + File.separator);
 		directory.mkdirs();
@@ -105,9 +104,9 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			e.printStackTrace();
 		}
 		for (Cheat c : Cheat.values())
-			WARNS.put(c, file.getInt("cheats." + c.getKey().toLowerCase()));
-		if(file.contains("better-click"))
-			BETTER_CLICK = file.getInt("better-click");
+			account.setWarnCount(c, file.getInt("cheats." + c.getKey().toLowerCase()));
+		if (file.contains("better-click"))
+			account.setMostClicksPerSecond(file.getInt("better-click"));
 		initMods(p);
 	}
 
@@ -143,26 +142,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 			}
 		}
 	}
-	
-	public void setBetterClick(int click) {
-		this.BETTER_CLICK = click;
-		try {
-			file.set("better-click", BETTER_CLICK);
-			file.save(configFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public int getWarn(Cheat c) {
-		return WARNS.containsKey(c) ? WARNS.get(c) : 0;
-	}
-
-	@Override
-	public int getAllWarn(Cheat c) {
-		return file.getInt("cheats." + c.getKey().toLowerCase());
-	}
 
 	@Deprecated
 	public void addWarn(Cheat c) {
@@ -172,36 +151,30 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public void addWarn(Cheat c, int reliability) {
 		if (System.currentTimeMillis() < TIME_INVINCIBILITY || c.getReliabilityAlert() > reliability)
 			return;
-		setWarn(c, WARNS.containsKey(c) ? WARNS.get(c) + 1 : 1);
-	}
-
-	public void setWarn(Cheat c, int cheats) {
-		try {
-			file.set("cheats." + c.getKey().toLowerCase(), cheats);
-			// Temporary workaround to save language until we refactor player data
-			// loading/saving
-			file.set("lang", getAccount().getLang());
-			file.save(configFile);
-			WARNS.put(c, cheats);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void setLang(String newLang) {
-		try {
-			getAccount().setLang(newLang);
-			file.set("lang", newLang);
-			file.save(configFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		NegativityAccount account = getAccount();
+		account.setWarnCount(c, account.getWarn(c) + 1);
 	}
 
 	public void updateMinerateInFile() {
+		saveData();
+	}
+	
+	private void saveData() {
+		NegativityAccount account = getAccount();
 		try {
-			for (MinerateType mt : MinerateType.values())
-				file.set("minerate." + mt.getName().toLowerCase(), mineRate.getMinerateType(mt));
+			file.set("lang", account.getLang());
+
+			file.set("better-click", account.getMostClicksPerSecond());
+
+			for (Map.Entry<Cheat, Integer> entry : account.getAllWarns().entrySet()) {
+				file.set("cheats." + entry.getKey().getKey(), entry.getValue());
+			}
+
+			Minerate minerate = account.getMinerate();
+			for (MinerateType mt : MinerateType.values()) {
+				file.set("minerate." + mt.getName().toLowerCase(), minerate.getMinerateType(mt));
+			}
+
 			file.save(configFile);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -401,6 +374,7 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 
 	private void destroy() {
 		saveProof();
+		saveData();
 		Adapter.getAdapter().invalidateAccount(getUUID());
 	}
 

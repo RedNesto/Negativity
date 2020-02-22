@@ -36,10 +36,16 @@ public abstract class NegativityPlayer {
 		isBanned = b;
 	}
 
+	public int getWarn(Cheat c) {
+		return getAccount().getWarn(c);
+	}
+
+	public int getAllWarn(Cheat c) {
+		return getAccount().getWarn(c);
+	}
+
 	public abstract Object getPlayer();
 	public abstract boolean hasDefaultPermission(String s);
-	public abstract int getWarn(Cheat c);
-	public abstract int getAllWarn(Cheat c);
 	public abstract double getLife();
 	public abstract String getName();
 	public abstract String getGameMode();

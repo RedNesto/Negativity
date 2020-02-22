@@ -44,8 +44,8 @@ import com.elikill58.negativity.universal.CheatKeys;
 import com.elikill58.negativity.universal.FlyingReason;
 import com.elikill58.negativity.universal.Minerate;
 import com.elikill58.negativity.universal.Minerate.MinerateType;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
-import com.elikill58.negativity.universal.adapter.Adapter;
 import com.flowpowered.math.vector.Vector3d;
 
 import ninja.leaping.configurate.ConfigurationNode;
@@ -57,7 +57,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 
 	public static ArrayList<Player> INJECTED = new ArrayList<>();
 	private ArrayList<Cheat> ACTIVE_CHEAT = new ArrayList<>();
-	public HashMap<Cheat, Integer> WARNS = new HashMap<>();
 	public HashMap<String, String> MODS = new HashMap<>();
 	public ArrayList<PotionEffect> POTION_EFFECTS = new ArrayList<>();
 	public ArrayList<FakePlayer> FAKE_PLAYER = new ArrayList<>();
@@ -67,7 +66,7 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	public int FLYING = 0, MAX_FLYING = 0, POSITION_LOOK = 0, KEEP_ALIVE = 0, POSITION = 0, BLOCK_PLACE = 0,
 			BLOCK_DIG = 0, ARM = 0, USE_ENTITY = 0, ENTITY_ACTION = 0, ALL = 0;
 	// warns & other
-	public int ONLY_KEEP_ALIVE = 0, NO_PACKET = 0, BETTER_CLICK = 0, LAST_CLICK = 0, ACTUAL_CLICK = 0, SEC_ACTIVE = 0;
+	public int ONLY_KEEP_ALIVE = 0, NO_PACKET = 0, LAST_CLICK = 0, ACTUAL_CLICK = 0, SEC_ACTIVE = 0;
 	public int movementsOnWater;
 	// setBack
 	public int NO_FALL_DAMAGE = 0, BYPASS_SPEED = 0, IS_LAST_SEC_BLINK = 0, LAST_SLOT_CLICK = -1;
@@ -84,7 +83,6 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	private ConfigurationNode config;
 	private HoconConfigurationLoader configLoader;
 	private final List<String> proofs = new ArrayList<>();
-	public Minerate mineRate;
 	public boolean isInFight = false;
 	public Task fightTask = null;
 	public int fakePlayerTouched = 0;
@@ -96,8 +94,8 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	public SpongeNegativityPlayer(Player p) {
 		super(p.getUniqueId());
 		this.p = p;
-		this.mineRate = new Minerate(this);
 
+		NegativityAccount account = getAccount();
 		String uuidString = p.getUniqueId().toString();
 		try {
 			Path userDir = SpongeNegativity.getInstance().getDataFolder().resolve("user");
@@ -112,19 +110,20 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 				ConfigurationNode cheatNode = cheatsNode.getNode(cheatId);
 				if (cheatNode.isVirtual()) {
 					cheatNode.setValue(0);
-					WARNS.put(cheat, 0);
+					account.setWarnCount(cheat, 0);
 				} else {
-					WARNS.put(cheat, cheatNode.getInt());
+					account.setWarnCount(cheat, cheatNode.getInt());
 				}
 			}
+			Minerate minerate = account.getMinerate();
 			ConfigurationNode minerateNode = config.getNode("minerate");
-			for(MinerateType mt : MinerateType.values()) {
+			for (MinerateType mt : MinerateType.values()) {
 				ConfigurationNode tempNode = minerateNode.getNode(mt.getName().toLowerCase());
 				if (tempNode.isVirtual()) {
 					tempNode.setValue(0);
-					mineRate.setMine(mt, 0);
+					minerate.setMine(mt, 0);
 				} else {
-					mineRate.setMine(mt, tempNode.getInt());
+					minerate.setMine(mt, tempNode.getInt());
 				}
 			}
 			configLoader.save(config);
@@ -174,17 +173,20 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 	}
 
 	public void saveData() {
+		NegativityAccount account = getAccount();
+
 		ConfigurationNode cheatsNode = config.getNode("cheats");
-		for (Map.Entry<Cheat, Integer> warn : WARNS.entrySet()) {
+		for (Map.Entry<Cheat, Integer> warn : account.getAllWarns().entrySet()) {
 			String cheatId = warn.getKey().getKey().toLowerCase();
 			cheatsNode.getNode(cheatId).setValue(warn.getValue());
 		}
+
 		ConfigurationNode minerateNode = config.getNode("minerate");
 		for (MinerateType mt : MinerateType.values()) {
-			minerateNode.getNode(mt.getName().toLowerCase()).setValue(mineRate.getMinerateType(mt));
+			minerateNode.getNode(mt.getName().toLowerCase()).setValue(account.getMinerate().getMinerateType(mt));
 		}
 
-		config.getNode("lang").setValue(getAccount().getLang());
+		config.getNode("lang").setValue(account.getLang());
 		try {
 			configLoader.save(config);
 		} catch (IOException e) {
@@ -193,7 +195,10 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 
 		if (!proofs.isEmpty()) {
 			try {
-				Files.createDirectories(proofFile.getParent());
+				Path userDir = SpongeNegativity.getInstance().getDataFolder().resolve("user");
+				Path proofDir = userDir.resolve("proof");
+				Files.createDirectories(proofDir);
+				Path proofFile = proofDir.resolve(p.getUniqueId() + ".txt");
 				Files.write(proofFile, proofs, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 			} catch (IOException e) {
 				SpongeNegativity.getInstance().getLogger().error("Unable to save proofs of player " + p.getName(), e);
@@ -211,32 +216,11 @@ public class SpongeNegativityPlayer extends NegativityPlayer {
 		return NegativityBypassTicket.hasBypassTicket(c, p);
 	}
 
-	public int getWarn(Cheat c) {
-		return WARNS.containsKey(c) ? WARNS.get(c) : 0;
-	}
-
-	public int getAllWarn(Cheat c) {
-		return config.getNode("cheats").getNode(c.getKey().toLowerCase()).getInt() + getWarn(c);
-	}
-
 	public void addWarn(Cheat c) {
 		if (System.currentTimeMillis() < TIME_INVINCIBILITY)
 			return;
-		if (WARNS.containsKey(c))
-			WARNS.put(c, WARNS.get(c) + 1);
-		else
-			WARNS.put(c, 1);
-		setWarn(c, WARNS.get(c));
-	}
-
-	public void setWarn(Cheat c, int cheats) {
-		try {
-			config.getNode("cheats").getNode(c.getKey().toLowerCase()).setValue(cheats);
-			configLoader.save(config);
-			WARNS.put(c, cheats);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		NegativityAccount account = getAccount();
+		account.setWarnCount(c, getWarn(c) + 1);
 	}
 
 	public void clearPackets() {

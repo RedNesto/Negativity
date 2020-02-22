@@ -36,7 +36,6 @@ import com.elikill58.negativity.universal.DefaultConfigValue;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.ReportType;
-import com.elikill58.negativity.universal.TranslatedMessages;
 import com.elikill58.negativity.universal.translation.CachingTranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProvider;
 import com.elikill58.negativity.universal.translation.TranslationProviderFactory;
@@ -270,7 +269,7 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 			return existingAccount;
 		}
 
-		NegativityAccount na = new NegativityAccount(playerId, TranslatedMessages.getLang(playerId));
+		NegativityAccount na = new NegativityAccount(playerId);
 		account.put(playerId, na);
 		return na;
 	}

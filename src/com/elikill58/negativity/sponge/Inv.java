@@ -25,6 +25,7 @@ import org.spongepowered.api.text.Text;
 
 import com.elikill58.negativity.sponge.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
+import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.NegativityPlayer;
 import com.elikill58.negativity.universal.adapter.Adapter;
 import com.elikill58.negativity.universal.permissions.Perm;
@@ -57,14 +58,15 @@ public class Inv {
 		GridInventory invGrid = inv.query(QueryOperationTypes.INVENTORY_TYPE.of(GridInventory.class));
 
 		SpongeNegativityPlayer np = SpongeNegativityPlayer.getNegativityPlayer(cible);
+		NegativityAccount account = np.getAccount();
 		invGrid.set(0, 0, Utils
 				.createItem(ItemTypes.STAINED_HARDENED_CLAY,
 						Messages.getStringMessage(p, "inventory.main.actual_click",
 								"%clicks%", String.valueOf(np.ACTUAL_CLICK)),
 						1, getByteFromClick(np.ACTUAL_CLICK)));
 		invGrid.set(1, 0, Utils.createItem(ItemTypes.STAINED_HARDENED_CLAY,
-				Messages.getStringMessage(p, "inventory.main.max_click", "%clicks%", String.valueOf(np.BETTER_CLICK)),
-				1, getByteFromClick(np.BETTER_CLICK)));
+				Messages.getStringMessage(p, "inventory.main.max_click", "%clicks%", String.valueOf(account.getMostClicksPerSecond())),
+				1, getByteFromClick(account.getMostClicksPerSecond())));
 		invGrid.set(2, 0, Utils.createItem(ItemTypes.STAINED_HARDENED_CLAY,
 				Messages.getStringMessage(p, "inventory.main.last_click", "%clicks%", String.valueOf(np.LAST_CLICK)), 1,
 				getByteFromClick(np.LAST_CLICK)));
@@ -74,7 +76,7 @@ public class Inv {
 
 		invGrid.set(0, 1, Utils.createItem(ItemTypes.DIAMOND_SWORD, "&rFight: "
 				+ Messages.getStringMessage(p, "inventory.manager." + (np.MODS.size() > 0 ? "enabled" : "disabled"))));
-		invGrid.set(1, 1, Utils.createItem(ItemTypes.DIAMOND_PICKAXE, "&rMinerate", np.mineRate.getInventoryLoreString()));
+		invGrid.set(1, 1, Utils.createItem(ItemTypes.DIAMOND_PICKAXE, "&rMinerate", account.getMinerate().getInventoryLoreString()));
 		invGrid.set(2, 1, Utils.createItem(ItemTypes.GRASS, "&rMods", "&7Forge: "
 				+ Messages.getStringMessage(p, "inventory.manager." + (np.MODS.size() > 0 ? "enabled" : "disabled"))));
 		invGrid.set(3, 1, getMcLeaksIndicator(p, np));
@@ -95,7 +97,7 @@ public class Inv {
 		p.openInventory(inv);
 		CHECKING.put(p, cible);
 	}
-	
+
 	private static ItemStack getMcLeaksIndicator(Player player, NegativityPlayer nPlayer) {
 		ItemStack indicator = ItemStack.of(ItemTypes.WOOL);
 		boolean usesMcLeaks = nPlayer.isMcLeaks();
@@ -109,6 +111,7 @@ public class Inv {
 		Inventory inv = p.getOpenInventory().get();
 		GridInventory invGrid = inv.first().query(QueryOperationTypes.INVENTORY_TYPE.of(GridInventory.class));
 		SpongeNegativityPlayer np = SpongeNegativityPlayer.getNegativityPlayer(cible);
+		NegativityAccount account = np.getAccount();
 
 		invGrid.set(0, 0, Utils
 				.createItem(
@@ -116,8 +119,8 @@ public class Inv {
 								"inventory.main.actual_click", "%clicks%", String.valueOf(np.ACTUAL_CLICK)),
 						1, getByteFromClick(np.ACTUAL_CLICK)));
 		invGrid.set(1, 0, Utils.createItem(ItemTypes.STAINED_HARDENED_CLAY,
-				Messages.getStringMessage(p, "inventory.main.max_click", "%clicks%", String.valueOf(np.BETTER_CLICK)),
-				1, getByteFromClick(np.BETTER_CLICK)));
+				Messages.getStringMessage(p, "inventory.main.max_click", "%clicks%", String.valueOf(account.getMostClicksPerSecond())),
+				1, getByteFromClick(account.getMostClicksPerSecond())));
 		invGrid.set(2, 0, Utils.createItem(ItemTypes.STAINED_HARDENED_CLAY,
 				Messages.getStringMessage(p, "inventory.main.last_click", "%clicks%", String.valueOf(np.LAST_CLICK)), 1,
 				getByteFromClick(np.LAST_CLICK)));

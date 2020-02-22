@@ -31,7 +31,7 @@ public class Perm {
 			try {
 				Connection con = Database.getConnection();
 				PreparedStatement stm = con.prepareStatement("SELECT * FROM " + Database.table_perm + " WHERE " + Database.column_uuid + " = ?");
-				stm.setString(1, np.getAccount().getUUID());
+				stm.setString(1, np.getUUID().toString());
 
 				ResultSet result = stm.executeQuery();
 				if (result.next()) {

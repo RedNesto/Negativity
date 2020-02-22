@@ -29,6 +29,7 @@ import com.elikill58.negativity.spigot.SpigotNegativityPlayer;
 import com.elikill58.negativity.spigot.commands.ReportCommand;
 import com.elikill58.negativity.spigot.utils.Utils;
 import com.elikill58.negativity.universal.Cheat;
+import com.elikill58.negativity.universal.Minerate;
 import com.elikill58.negativity.universal.Minerate.MinerateType;
 import com.elikill58.negativity.universal.NegativityAccount;
 import com.elikill58.negativity.universal.SuspectManager;
@@ -139,6 +140,8 @@ public class PlayersEvents implements Listener {
 
 	@EventHandler
 	public void onBlockBreakEvent(BlockBreakEvent e) {
-		SpigotNegativityPlayer.getNegativityPlayer(e.getPlayer()).mineRate.addMine(MinerateType.getMinerateType(e.getBlock().getType().name()));
+		SpigotNegativityPlayer nPlayer = SpigotNegativityPlayer.getNegativityPlayer(e.getPlayer());
+		Minerate minerate = nPlayer.getAccount().getMinerate();
+		minerate.addMine(MinerateType.getMinerateType(e.getBlock().getType().name()), nPlayer);
 	}
 }
