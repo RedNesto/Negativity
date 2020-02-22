@@ -88,16 +88,8 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 	public SpigotNegativityPlayer(Player p) {
 		super(p.getUniqueId());
 		this.p = new WeakReference<>(p);
-		this.uuid = p.getUniqueId();
 		players.put(p.getUniqueId(), this);
 		initMods(p);
-	}
-
-	public SpigotNegativityPlayer(OfflinePlayer op) {
-		super(op.getUniqueId());
-		this.op = op;
-		this.uuid = op.getUniqueId();
-		players.put(this.uuid, this);
 	}
 
 	public void initMods(Player p) {
