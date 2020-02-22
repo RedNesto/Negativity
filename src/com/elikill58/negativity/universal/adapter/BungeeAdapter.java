@@ -43,6 +43,7 @@ public class BungeeAdapter extends Adapter implements TranslationProviderFactory
 
 	private Configuration config;
 	private Plugin pl;
+	private Map<UUID, NegativityAccount> accountsCache = new HashMap<>();
 
 	public BungeeAdapter(Plugin pl, Configuration config) {
 		this.pl = pl;
@@ -228,7 +229,11 @@ public class BungeeAdapter extends Adapter implements TranslationProviderFactory
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {
-		return NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
+		NegativityAccountStorage storage = NegativityAccountStorage.getStorage();
+		if (storage != null) {
+			return accountsCache.computeIfAbsent(playerId, storage::getOrCreateAccount);
+		}
+		return new NegativityAccount(playerId);
 	}
 
 	@Nullable
@@ -238,8 +243,11 @@ public class BungeeAdapter extends Adapter implements TranslationProviderFactory
 		return player != null ? BungeeNegativityPlayer.getNegativityPlayer(player) : null;
 	}
 
+	@Nullable
 	@Override
-	public void invalidateAccount(UUID playerId) {}
+	public NegativityAccount invalidateAccount(UUID playerId) {
+		return accountsCache.remove(playerId);
+	}
 
 	@Override
 	public void alertMod(ReportType type, Object p, Cheat c, int reliability, String proof, String hover_proof) {}
