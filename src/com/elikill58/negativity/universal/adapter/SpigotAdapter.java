@@ -257,22 +257,21 @@ public class SpigotAdapter extends Adapter implements TranslationProviderFactory
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {
-		NegativityAccount existingAccount = account.get(playerId);
-		if (existingAccount != null) {
-			return existingAccount;
+		NegativityAccountStorage storage = NegativityAccountStorage.getStorage();
+		if (storage != null) {
+			return account.computeIfAbsent(playerId, storage::getOrCreateAccount);
 		}
-
-		NegativityAccount na = NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
-		account.put(playerId, na);
-		return na;
+		return account.computeIfAbsent(playerId, NegativityAccount::new);
 	}
 
+	@Nullable
 	@Override
-	public void invalidateAccount(UUID playerId) {
+	public NegativityAccount invalidateAccount(UUID playerId) {
 		NegativityAccount account = this.account.remove(playerId);
 		if (account != null) {
 			NegativityAccountStorage.getStorage().saveAccount(account);
 		}
+		return account;
 	}
 
 	@Override

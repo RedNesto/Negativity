@@ -43,6 +43,7 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 
 	private Configuration config;
 	private VelocityNegativity pl;
+	private Map<UUID, NegativityAccount> accountsCache = new HashMap<>();
 
 	public VelocityAdapter(VelocityNegativity pl, Configuration config) {
 		this.pl = pl;
@@ -228,7 +229,11 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 	@Nonnull
 	@Override
 	public NegativityAccount getNegativityAccount(UUID playerId) {
-		return NegativityAccountStorage.getStorage().getOrCreateAccount(playerId);
+		NegativityAccountStorage storage = NegativityAccountStorage.getStorage();
+		if (storage != null) {
+			return accountsCache.computeIfAbsent(playerId, storage::getOrCreateAccount);
+		}
+		return accountsCache.computeIfAbsent(playerId, NegativityAccount::new);
 	}
 
 	@Nullable
@@ -238,8 +243,11 @@ public class VelocityAdapter extends Adapter implements TranslationProviderFacto
 		return player.isPresent() ? VelocityNegativityPlayer.getNegativityPlayer(player.get()) : null;
 	}
 
+	@Nullable
 	@Override
-	public void invalidateAccount(UUID playerId) {}
+	public NegativityAccount invalidateAccount(UUID playerId) {
+		return accountsCache.remove(playerId);
+	}
 
 	@Override
 	public void alertMod(ReportType type, Object p, Cheat c, int reliability, String proof, String hover_proof) {}
