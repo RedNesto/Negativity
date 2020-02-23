@@ -11,12 +11,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.potion.PotionEffectType;
 
 import com.elikill58.negativity.spigot.ClickableText;
 import com.elikill58.negativity.spigot.SpigotNegativity;
@@ -357,6 +360,25 @@ public class Utils {
 		for (ItemStack item : player.getInventory().getArmorContents())
 			if (item != null && item.getType().name().contains("ELYTRA"))
 				return true;
+		return false;
+	}
+
+	public static boolean isTargetByIronGolem(Player player) {
+		for(Entity et : player.getWorld().getEntities())
+			if(et instanceof IronGolem)
+				if(((IronGolem) et).getTarget() != null && ((IronGolem) et).getTarget().equals(player))
+					return true;
+		return false;
+	}
+
+	public static boolean hasPotionEffect(String effectName, Player player) {
+		try {
+			PotionEffectType potionEffect = PotionEffectType.getByName(effectName);
+			if(potionEffect != null) // If optionEffect is null, it doesn't exist in this version
+				return player.hasPotionEffect(potionEffect);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 }

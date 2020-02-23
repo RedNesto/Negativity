@@ -21,10 +21,7 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Damageable;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.IronGolem;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
@@ -594,25 +591,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		fightTask = null;
 	}
 
-	public boolean isTargetByIronGolem() {
-		for(Entity et : getPlayer().getWorld().getEntities())
-			if(et instanceof IronGolem)
-				if(((IronGolem) et).getTarget() != null && ((IronGolem) et).getTarget().equals((LivingEntity) getPlayer()))
-					return true;
-		return false;
-	}
-	
-	public boolean hasPotionEffect(String effectName) {
-		try {
-			PotionEffectType potionEffect = PotionEffectType.getByName(effectName);
-			if(potionEffect != null) // If optionEffect is null, it doesn't exist in this version
-				return getPlayer().hasPotionEffect(potionEffect);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
 	public static SpigotNegativityPlayer getNegativityPlayer(Player p) {
 		return players.computeIfAbsent(p.getUniqueId(), id -> new SpigotNegativityPlayer(p));
 	}
