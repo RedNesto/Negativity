@@ -26,7 +26,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -514,58 +513,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		return false;
 	}
 
-	public boolean isBlock(Material m) {
-		// for Last version blocks
-		String mn = m.name();
-		if (mn.equals("PRISMARINE") || mn.contains("_SHULKER_BOX") || mn.contains("BLOCK") || mn.contains("WOOD")
-				|| mn.contains("LOG") || mn.contains("WOOL") || mn.equals("PURPUR_BLOCK") || mn.equals("END_BRICKS")
-				|| mn.equals("BEETROOT_BLOCK") || mn.equals("BONE_BLOCK") || mn.contains("STAINED")
-				|| mn.contains("CLAY"))
-			return true;
-		switch (m) {
-		case ANVIL:
-		case APPLE:
-		case ARROW:
-		case BEACON:
-		case BRICK:
-		case COAL_BLOCK:
-		case COBBLESTONE:
-		case DIRT:
-		case EMERALD_BLOCK:
-		case FURNACE:
-		case GOLD_BLOCK:
-		case GRASS:
-		case HAY_BLOCK:
-		case HOPPER:
-		case IRON_AXE:
-		case IRON_BLOCK:
-		case IRON_ORE:
-		case JACK_O_LANTERN:
-		case JUKEBOX:
-		case LADDER:
-		case LAPIS_BLOCK:
-		case MOSSY_COBBLESTONE:
-		case NETHER_BRICK:
-		case NOTE_BLOCK:
-		case OBSIDIAN:
-		case QUARTZ_BLOCK:
-		case REDSTONE:
-		case REDSTONE_BLOCK:
-		case REDSTONE_ORE:
-		case RED_MUSHROOM:
-		case SADDLE:
-		case SAND:
-		case SANDSTONE:
-		case SPONGE:
-		case STONE:
-		case TNT:
-			break;
-		default:
-			return false;
-		}
-		return true;
-	}
-
 	@Override
 	public boolean hasDefaultPermission(String s) {
 		return getPlayer().hasPermission(s);
@@ -645,13 +592,6 @@ public class SpigotNegativityPlayer extends NegativityPlayer {
 		if (fightTask != null)
 			fightTask.cancel();
 		fightTask = null;
-	}
-	
-	public boolean hasElytra() {
-		for (ItemStack item : getPlayer().getInventory().getArmorContents())
-			if (item != null && item.getType().name().contains("ELYTRA"))
-				return true;
-		return false;
 	}
 
 	public boolean isTargetByIronGolem() {

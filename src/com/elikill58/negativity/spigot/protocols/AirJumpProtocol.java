@@ -31,7 +31,7 @@ public class AirJumpProtocol extends Cheat implements Listener {
 		SpigotNegativityPlayer np = SpigotNegativityPlayer.getNegativityPlayer(p);
 		if (!np.ACTIVE_CHEAT.contains(this))
 			return;
-		if (p.isFlying() || p.getVehicle() != null || p.getItemInHand().getType().name().contains("TRIDENT") || np.hasElytra() || np.isInFight)
+		if (p.isFlying() || p.getVehicle() != null || p.getItemInHand().getType().name().contains("TRIDENT") || Utils.hasElytra(p) || np.isInFight)
 			return;
 		double temp = e.getTo().getY() - e.getFrom().getY();
 		Location loc = p.getLocation().clone();

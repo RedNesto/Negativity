@@ -300,4 +300,63 @@ public class Utils {
 		}
 		p.teleport(loc.add(0, 1, 0));
 	}
+
+	public static boolean isBlock(Material m) {
+		// for Last version blocks
+		String mn = m.name();
+		if (mn.equals("PRISMARINE") || mn.contains("_SHULKER_BOX") || mn.contains("BLOCK") || mn.contains("WOOD")
+				|| mn.contains("LOG") || mn.contains("WOOL") || mn.equals("PURPUR_BLOCK") || mn.equals("END_BRICKS")
+				|| mn.equals("BEETROOT_BLOCK") || mn.equals("BONE_BLOCK") || mn.contains("STAINED")
+				|| mn.contains("CLAY"))
+			return true;
+		switch (m) {
+		case ANVIL:
+		case APPLE:
+		case ARROW:
+		case BEACON:
+		case BRICK:
+		case COAL_BLOCK:
+		case COBBLESTONE:
+		case DIRT:
+		case EMERALD_BLOCK:
+		case FURNACE:
+		case GOLD_BLOCK:
+		case GRASS:
+		case HAY_BLOCK:
+		case HOPPER:
+		case IRON_AXE:
+		case IRON_BLOCK:
+		case IRON_ORE:
+		case JACK_O_LANTERN:
+		case JUKEBOX:
+		case LADDER:
+		case LAPIS_BLOCK:
+		case MOSSY_COBBLESTONE:
+		case NETHER_BRICK:
+		case NOTE_BLOCK:
+		case OBSIDIAN:
+		case QUARTZ_BLOCK:
+		case REDSTONE:
+		case REDSTONE_BLOCK:
+		case REDSTONE_ORE:
+		case RED_MUSHROOM:
+		case SADDLE:
+		case SAND:
+		case SANDSTONE:
+		case SPONGE:
+		case STONE:
+		case TNT:
+			break;
+		default:
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean hasElytra(Player player) {
+		for (ItemStack item : player.getInventory().getArmorContents())
+			if (item != null && item.getType().name().contains("ELYTRA"))
+				return true;
+		return false;
+	}
 }

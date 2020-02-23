@@ -34,7 +34,7 @@ public class SpiderProtocol extends Cheat implements Listener {
 		Location loc = p.getLocation();
 		if (!np.ACTIVE_CHEAT.contains(this))
 			return;
-		if (p.getFallDistance() != 0 || np.hasElytra() || p.isFlying() || p.hasPotionEffect(PotionEffectType.JUMP))
+		if (p.getFallDistance() != 0 || Utils.hasElytra(p) || p.isFlying() || p.hasPotionEffect(PotionEffectType.JUMP))
 			return;
 		if(e.getFrom().getX() == e.getTo().getX() && e.getFrom().getZ() == e.getTo().getZ())
 			return;

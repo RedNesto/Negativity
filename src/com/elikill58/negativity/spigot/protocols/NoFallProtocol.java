@@ -33,7 +33,7 @@ public class NoFallProtocol extends Cheat implements Listener {
 			return;
 		if (!p.getGameMode().equals(GameMode.SURVIVAL) && !p.getGameMode().equals(GameMode.ADVENTURE))
 			return;
-		if(p.getAllowFlight() || np.hasElytra())
+		if(p.getAllowFlight() || Utils.hasElytra(p))
 			return;
 		Location from = e.getFrom(), to = e.getTo();
 		double distance = to.toVector().distance(from.toVector());

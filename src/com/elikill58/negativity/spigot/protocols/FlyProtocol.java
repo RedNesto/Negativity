@@ -38,7 +38,7 @@ public class FlyProtocol extends Cheat implements Listener {
 			return;
 		if(!p.getLocation().subtract(0, 1, 0).getBlock().getType().equals(Material.AIR) || !p.getLocation().subtract(0, 2, 0).getBlock().getType().equals(Material.AIR))
 			return;
-		if((p.isSprinting() && (e.getTo().getY() - e.getFrom().getY()) > 0) || np.hasElytra() || p.getItemInHand().getType().name().contains("TRIDENT"))
+		if((p.isSprinting() && (e.getTo().getY() - e.getFrom().getY()) > 0) || Utils.hasElytra(p) || p.getItemInHand().getType().name().contains("TRIDENT"))
 			return;
 
 		if (p.hasPotionEffect(PotionEffectType.SPEED)) {
