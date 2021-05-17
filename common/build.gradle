@@ -51,4 +51,5 @@ parent.tasks.named('shadowJar', ShadowJar) {
 
 test {
     useJUnitPlatform()
+    systemProperty 'negativity.testing', 'true'
 }

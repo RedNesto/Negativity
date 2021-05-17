@@ -15,6 +15,7 @@
 !/api/
 !/bungee/
 !/common/
+!/postgresql-extension/
 !/spigot/
 !/sponge/
 !/sponge8/

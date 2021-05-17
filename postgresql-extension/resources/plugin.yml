@@ -1,0 +1,6 @@
+name: NegativityPGSQL
+main: com.elikill58.negativity.postgresql.NegativityPGSQL
+version: ${version}
+author: [Elikill58, RedNesto]
+description: A PostgreSQL driver packaged as a plugin for Negativity.
+loadbefore: [Negativity]

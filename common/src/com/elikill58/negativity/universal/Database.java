@@ -98,7 +98,8 @@ public class Database {
 	
 	public static enum DatabaseType {
 		MARIA("mariadb", "MariaDB", "org.mariadb.jdbc.Driver"),
-		MYSQL("mysql", "MySQL", "com.mysql.jdbc.Driver");
+		MYSQL("mysql", "MySQL", "com.mysql.jdbc.Driver"),
+		POSTGRESQL("postgresql", "PostgreSQL", "org.postgresql.Driver");
 		
 		private final String type, name, driver;
 		
