@@ -18,6 +18,7 @@ sourceSets {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    testRuntimeOnly("mysql:mysql-connector-java:8.0.25")
 }
 
 processResources {
@@ -51,5 +52,24 @@ parent.tasks.named('shadowJar', ShadowJar) {
 
 test {
     useJUnitPlatform()
+
+    workingDir(file('testRun'))
+    doFirst {
+        workingDir.mkdirs()
+    }
+
     systemProperty 'negativity.testing', 'true'
+    def testSystemProperties = [
+            'negativity.mysql.url', 'negativity.mysql.user', 'negativity.mysql.password',
+    ].collectEntries {
+        def property = this.project.findProperty(it)
+        if (property != null) [it, property] else []
+    }
+    testSystemProperties.remove(null) // Missing properties will add a null key and value, which isn't supported by Gradle.
+    inputs.properties(testSystemProperties)
+    systemProperties(testSystemProperties)
+}
+
+tasks.named('cleanTest', Delete.class) {
+    it.delete(test.workingDir)
 }
