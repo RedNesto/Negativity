@@ -19,6 +19,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
     testRuntimeOnly("mysql:mysql-connector-java:8.0.25")
+    testRuntimeOnly("org.postgresql:postgresql:42.2.20")
 }
 
 processResources {
@@ -59,15 +60,16 @@ test {
     }
 
     systemProperty 'negativity.testing', 'true'
-    def testSystemProperties = [
-            'negativity.mysql.url', 'negativity.mysql.user', 'negativity.mysql.password',
+    def testSystemEnvKeys = [
+            'NEGATIVITY_MYSQL_URL', 'NEGATIVITY_MYSQL_USER', 'NEGATIVITY_MYSQL_PASSWORD',
+            'NEGATIVITY_PGSQL_URL', 'NEGATIVITY_PGSQL_USER', 'NEGATIVITY_PGSQL_PASSWORD',
     ].collectEntries {
-        def property = this.project.findProperty(it)
-        if (property != null) [it, property] else []
+        def env = System.getenv(it)
+        if (env != null) [it, env] else []
     }
-    testSystemProperties.remove(null) // Missing properties will add a null key and value, which isn't supported by Gradle.
-    inputs.properties(testSystemProperties)
-    systemProperties(testSystemProperties)
+    testSystemEnvKeys.remove(null) // Missing properties will add a null key and value, which isn't supported by Gradle.
+    inputs.properties(testSystemEnvKeys)
+    environment(testSystemEnvKeys)
 }
 
 tasks.named('cleanTest', Delete.class) {

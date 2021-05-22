@@ -37,7 +37,7 @@ public abstract class BaseBanProcessorTests {
 	protected abstract void configure(Configuration configuration);
 	
 	@BeforeEach
-	public void setUp() {
+	public void setUp() throws SQLException {
 		TestAdapter adapter = new TestAdapter();
 		Adapter.setAdapter(adapter);
 		Configuration config = adapter.getConfig();
@@ -45,6 +45,11 @@ public abstract class BaseBanProcessorTests {
 		configure(config);
 		adapter.reload();
 		Assumptions.assumeTrue(Database.hasCustom, "Could not connect to database, skipping tests.");
+		Connection connection = Database.getConnection();
+		if (connection != null) {
+			// Clearing the tables before each test guarantees proper test isolation on the database end
+			clearDatabaseTables(connection);
+		}
 	}
 	
 	@AfterEach
@@ -62,17 +67,15 @@ public abstract class BaseBanProcessorTests {
 		try (PreparedStatement listTablesStm = connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'negativity_tests'")) {
 			ResultSet listTablesResult = listTablesStm.executeQuery();
 			connection.setAutoCommit(false);
-			try (PreparedStatement disableForeignCheckStm = connection.prepareStatement("SET FOREIGN_KEY_CHECKS = 0")) {
-				disableForeignCheckStm.executeUpdate();
-			}
 			while (listTablesResult.next()) {
 				String tableName = listTablesResult.getString("TABLE_NAME");
+				if (!tableName.startsWith("negativity_")) {
+					continue;
+				}
+
 				try (PreparedStatement dropTableStm = connection.prepareStatement("DROP TABLE " + tableName)) {
 					dropTableStm.executeUpdate();
 				}
-			}
-			try (PreparedStatement enableForeignCheckStm = connection.prepareStatement("SET FOREIGN_KEY_CHECKS = 1")) {
-				enableForeignCheckStm.executeUpdate();
 			}
 			connection.commit();
 		} catch (Throwable throwable) {
