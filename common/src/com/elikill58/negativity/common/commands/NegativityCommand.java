@@ -67,10 +67,10 @@ public final class NegativityCommand {
 		}
 	}
 	
-	//@Command
+	@Command
 	// TODO missing ability to define time default value and get a Set<Cheat>
-	public static void verif(CommandSender sender, Player target, int time, Set<Cheat> cheatsToVerify) {
-		if (Perm.hasPerm(sender, Perm.VERIF)) {
+	public static void verif(CommandSender sender, Player target, int time, Cheat[] cheatsToVerify) {
+		if (!Perm.hasPerm(sender, Perm.VERIF)) {
 			Messages.sendMessage(sender, "not_permission");
 			return;
 		}
@@ -87,14 +87,16 @@ public final class NegativityCommand {
 		//}
 		
 		NegativityPlayer nTarget = NegativityPlayer.getNegativityPlayer(target);
-		if (cheatsToVerify.isEmpty()) {
+		Set<Cheat> cheats = new HashSet<>();
+		if (cheatsToVerify.length == 0) {
 			nTarget.startAllAnalyze();
 			Messages.sendMessage(sender, "negativity.verif.start_all", "%name%", target.getName(), "%time%", time);
-			cheatsToVerify = new HashSet<>(Cheat.CHEATS);
+			cheats.addAll(Cheat.CHEATS);
 		} else {
 			StringJoiner cheatsList = new StringJoiner(", ");
 			for (Cheat cheat : cheatsToVerify) {
 				cheatsList.add(cheat.getName());
+				cheats.add(cheat);
 			}
 			Messages.sendMessage(sender, "negativity.verif.start", "%name%", target.getName(), "%cheat%", cheatsList, "%time%", time);
 		}
@@ -124,7 +126,7 @@ public final class NegativityCommand {
 		//	}
 		//}
 		UUID senderId = sender instanceof Player ? ((Player) sender).getUniqueId() : CONSOLE;
-		VerificationManager.create(senderId, target.getUniqueId(), new Verificator(nTarget, sender.getName(), cheatsToVerify));
+		VerificationManager.create(senderId, target.getUniqueId(), new Verificator(nTarget, sender.getName(), cheats));
 		Scheduler.getInstance().runDelayed(() -> {
 			Verificator verif = VerificationManager.getVerificationsFrom(target.getUniqueId(), senderId).get();
 			verif.generateMessage();

@@ -1,6 +1,7 @@
 package com.elikill58.negativity.api.commands;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -23,6 +24,7 @@ import com.elikill58.negativity.api.events.others.CommandExecutionEvent;
 import com.elikill58.negativity.api.events.others.TabExecutionEvent;
 import com.elikill58.negativity.common.commands.NegativityCommand;
 import com.elikill58.negativity.universal.Adapter;
+import com.elikill58.negativity.universal.Cheat;
 
 public class CommandManager implements Listeners {
 	
@@ -35,8 +37,10 @@ public class CommandManager implements Listeners {
 		this.parameters = new LinkedHashMap<>();
 		this.parameters.put(Player.class, new CommandParameter.OnlinePlayerParameter());
 		this.parameters.put(OfflinePlayer.class, new CommandParameter.OfflinePlayerParameter());
-		this.parameters.put(Integer.class, new CommandParameter.StringParameter());
+		this.parameters.put(int.class, new CommandParameter.IntegerParameter());
+		this.parameters.put(Integer.class, new CommandParameter.IntegerParameter());
 		this.parameters.put(String.class, new CommandParameter.StringParameter());
+		this.parameters.put(Cheat.class, new CommandParameter.CheatParameter());
 		
 		// TODO register commands outside of the manager!
 		register(NegativityCommand.class);
@@ -75,6 +79,15 @@ public class CommandManager implements Listeners {
 		//	commands.put("nunban", unban);
 		//	tabs.put("nunban", unban);
 		//}
+	}
+	
+	public static void main(String[] args) {
+		CommandManager manager = new CommandManager();
+		manager.register(NegativityCommand.class);
+		ConsoleSender sender = new ConsoleSender();
+		manager.execute(sender, "negativity", new String[]{"Player"});
+		manager.execute(sender, "reload", new String[0]);
+		manager.execute(sender, "negativity", new String[]{"reload"});
 	}
 	
 	private void register(Class<?> commandClass) {
@@ -230,6 +243,24 @@ public class CommandManager implements Listeners {
 		//	e.setTabContent(cmd.onTabComplete(e.getSender(), e.getArgument(), e.getPrefix()));
 	}
 	
+	private static class ConsoleSender implements CommandSender {
+		
+		@Override
+		public Object getDefault() {
+			throw new UnsupportedOperationException("To be implemented"); // TODO
+		}
+		
+		@Override
+		public void sendMessage(String msg) {
+			System.out.println("Message received: " + msg);
+		}
+		
+		@Override
+		public String getName() {
+			return "Console";
+		}
+	}
+	
 	private class CommandWrapper {
 		
 		private final Map<String, CommandWrapper> children;
@@ -253,7 +284,13 @@ public class CommandManager implements Listeners {
 				String firstArg = args[0];
 				CommandWrapper child = this.children.get(firstArg);
 				if (child != null) {
-					child.execute(sender, Arrays.copyOfRange(args, 1, args.length));
+					String[] childArgs;
+					if (args.length > 1) {
+						childArgs = Arrays.copyOfRange(args, 1, args.length);
+					} else {
+						childArgs = new String[0];
+					}
+					child.execute(sender, childArgs);
 					return;
 				}
 			}
@@ -263,7 +300,7 @@ public class CommandManager implements Listeners {
 			}
 			
 			Class<?>[] parameterTypes = executor.getParameterTypes();
-			if (args.length < parameterTypes.length - 1) {
+			if (args.length < parameterTypes.length - 1 && !parameterTypes[parameterTypes.length - 1].isArray()) {
 				throw new InvalidCommandException("Not enough arguments (expected " + (parameterTypes.length - 1) + " but got " + args.length + ")");
 			}
 			
@@ -273,17 +310,60 @@ public class CommandManager implements Listeners {
 			int argumentPointer = 0;
 			for (int i = 1, parameterTypesLength = parameterTypes.length; i < parameterTypesLength; i++) {
 				Class<?> parameterType = parameterTypes[i];
-				for (Map.Entry<Class<?>, CommandParameter<?>> parameterEntry : CommandManager.this.parameters.entrySet()) {
-					Class<?> paramClass = parameterEntry.getKey();
-					if (parameterType.isAssignableFrom(paramClass)) {
-						Object parseResult = parameterEntry.getValue().parse(args[argumentPointer]);
-						if (parseResult != null) {
-							argumentPointer++;
-							parameters.add(parseResult);
-							break;
+				if (parameterType.isArray()) {
+					Class<?> componentType = parameterType.getComponentType();
+					if (argumentPointer == args.length) {
+						parameters.add(Array.newInstance(componentType, 0));
+						break;
+					}
+					
+					List<Object> values = new ArrayList<>();
+					while (argumentPointer < args.length) {
+						for (Map.Entry<Class<?>, CommandParameter<?>> parameterEntry : CommandManager.this.parameters.entrySet()) {
+							Class<?> paramClass = parameterEntry.getKey();
+							if (componentType.isAssignableFrom(paramClass)) {
+								String rawParameter = args[argumentPointer];
+								Object parseResult = parameterEntry.getValue().parse(rawParameter);
+								if (parseResult != null) {
+									argumentPointer++;
+									values.add(parseResult);
+								} else {
+									throw new InvalidCommandException("Failed to parse parameter '" + rawParameter + "' as " + parameterEntry.getKey().getSimpleName());
+								}
+							}
+						}
+					}
+					// Required to get an array with the correct component type, otherwise executor invocation fails with an IllegalArgumentException
+					Object[] dummyArray = (Object[]) Array.newInstance(componentType, 0);
+					parameters.add(values.toArray(dummyArray));
+					break;
+				} else {
+					for (Map.Entry<Class<?>, CommandParameter<?>> parameterEntry : CommandManager.this.parameters.entrySet()) {
+						Class<?> paramClass = parameterEntry.getKey();
+						if (parameterType.isAssignableFrom(paramClass)) {
+							Object parseResult = parameterEntry.getValue().parse(args[argumentPointer]);
+							if (parseResult != null) {
+								argumentPointer++;
+								parameters.add(parseResult);
+								break;
+							}
 						}
 					}
 				}
+			}
+			
+			if (args.length != argumentPointer) {
+				throw new InvalidCommandException("Not all arguments were consumed (got " + args.length + " but parsed " + argumentPointer + ")");
+			}
+			
+			if (parameters.size() != parameterTypes.length) {
+				//if (parameters.size() + 1 == parameterTypes.length) {
+				//	if (parameterTypes[parameterTypes.length - 1].isArray()) {
+				//		// If we are only missing the last array argument
+				//		parameters.add(Array.newInstance(parameterTypes[parameterTypes.length - 1].getComponentType(), 0));
+				//	}
+				//}
+				throw new InvalidCommandException("Not enough arguments parsed (expected " + parameterTypes.length + " but got " + parameters.size() + ")");
 			}
 			
 			executor.invoke(null, parameters.toArray());
@@ -301,33 +381,6 @@ public class CommandManager implements Listeners {
 		public List<String> suggest(CommandSender sender, String[] args) {
 			// TODO
 			return Collections.emptyList();
-		}
-	}
-	
-	public static void main(String[] args) {
-		CommandManager manager = new CommandManager();
-		manager.register(NegativityCommand.class);
-		ConsoleSender sender = new ConsoleSender();
-		manager.execute(sender, "negativity", new String[]{"Player"});
-		manager.execute(sender, "reload", new String[0]);
-		manager.execute(sender, "negativity", new String[]{"reload"});
-	}
-	
-	private static class ConsoleSender implements CommandSender {
-		
-		@Override
-		public Object getDefault() {
-			throw new UnsupportedOperationException("To be implemented"); // TODO
-		}
-		
-		@Override
-		public void sendMessage(String msg) {
-			System.out.println("Message received: " + msg);
-		}
-		
-		@Override
-		public String getName() {
-			return "Console";
 		}
 	}
 }

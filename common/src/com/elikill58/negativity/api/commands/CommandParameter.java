@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import com.elikill58.negativity.api.entity.OfflinePlayer;
 import com.elikill58.negativity.api.entity.Player;
 import com.elikill58.negativity.universal.Adapter;
+import com.elikill58.negativity.universal.Cheat;
 
 public interface CommandParameter<T> {
 	
@@ -55,6 +56,14 @@ public interface CommandParameter<T> {
 			} catch (IllegalArgumentException ignore) {
 			}
 			return Adapter.getAdapter().getOfflinePlayer(argument);
+		}
+	}
+	
+	final class CheatParameter implements CommandParameter<Cheat> {
+		
+		@Override
+		public @Nullable Cheat parse(String argument) {
+			return Cheat.fromString(argument);
 		}
 	}
 }
