@@ -90,7 +90,7 @@ public class CommandManager implements Listeners {
 		manager.execute(sender, "negativity", new String[]{"reload"});
 	}
 	
-	private void register(Class<?> commandClass) {
+	public void register(Class<?> commandClass) {
 		CommandRoot commandRoot = commandClass.getAnnotation(CommandRoot.class);
 		String @Nullable [] rootAliases = null;
 		@Nullable String mainRootAlias = null;
