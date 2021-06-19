@@ -17,7 +17,7 @@ public class CommandTests {
 		manager.execute(sender, "unknown", new String[0]);
 		assertIterableEquals(Collections.emptyList(), sender.messages);
 	}
-
+	
 	@Test
 	public void testSimpleCommand() {
 		CommandManager manager = new CommandManager();
@@ -35,9 +35,10 @@ public class CommandTests {
 		manager.execute(sender3, "simple3", new String[]{"10"});
 		assertIterableEquals(Collections.singletonList("Number: 10"), sender3.messages);
 		
-		TestCommandSender sender4 = new TestCommandSender();
-		manager.execute(sender4, "simple3", new String[]{"invalid"});
-		assertIterableEquals(Collections.singletonList("Failed to execute command: Not all arguments were consumed (got 1 but parsed 0)"), sender4.messages);
+		assertThrows(ParameterException.class, () -> {
+			TestCommandSender sender4 = new TestCommandSender();
+			manager.execute(sender4, "simple3", new String[]{"invalid"});
+		}, "Invalid int: invalid");
 		
 		TestCommandSender sender5 = new TestCommandSender();
 		manager.execute(sender5, "vararginteger", new String[]{"1", "3", "-2", "100"});
@@ -87,6 +88,10 @@ public class CommandTests {
 		TestCommandSender sender4 = new TestCommandSender();
 		manager.execute(sender4, "root", new String[]{"subcommand2", "myarg"});
 		assertIterableEquals(Collections.singletonList("Subcommand2 argument: myarg"), sender4.messages);
+		
+		TestCommandSender sender5 = new TestCommandSender();
+		manager.execute(sender5, "root", new String[]{"nosubcommand"});
+		assertIterableEquals(Collections.singletonList("Failed to execute command: Unknown subcommand: nosubcommand"), sender5.messages);
 	}
 	
 	@CommandRoot({"root", "r"})

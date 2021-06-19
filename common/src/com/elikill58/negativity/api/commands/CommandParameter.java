@@ -11,59 +11,57 @@ import com.elikill58.negativity.universal.Cheat;
 
 public interface CommandParameter<T> {
 	
-	@Nullable T parse(String argument);
+	@Nullable T parse(ParameterParser parser);
 	
 	final class StringParameter implements CommandParameter<String> {
 		
 		@Override
-		public @Nullable String parse(String argument) {
-			return argument;
+		public @Nullable String parse(ParameterParser parser) {
+			return parser.next();
 		}
 	}
 	
 	final class IntegerParameter implements CommandParameter<Integer> {
 		
 		@Override
-		public @Nullable Integer parse(String argument) {
-			try {
-				return Integer.parseInt(argument);
-			} catch (NumberFormatException ignore) {
-			}
-			return null;
+		public @Nullable Integer parse(ParameterParser parser) {
+			return parser.nextInt();
 		}
 	}
 	
 	final class OnlinePlayerParameter implements CommandParameter<Player> {
 		
 		@Override
-		public @Nullable Player parse(String argument) {
+		public @Nullable Player parse(ParameterParser parser) {
+			String raw = parser.next();
 			try {
-				UUID playerId = UUID.fromString(argument);
+				UUID playerId = UUID.fromString(raw);
 				return Adapter.getAdapter().getPlayer(playerId);
 			} catch (IllegalArgumentException ignore) {
 			}
-			return Adapter.getAdapter().getPlayer(argument);
+			return Adapter.getAdapter().getPlayer(raw);
 		}
 	}
 	
 	final class OfflinePlayerParameter implements CommandParameter<OfflinePlayer> {
 		
 		@Override
-		public @Nullable OfflinePlayer parse(String argument) {
+		public @Nullable OfflinePlayer parse(ParameterParser parser) {
+			String raw = parser.next();
 			try {
-				UUID playerId = UUID.fromString(argument);
+				UUID playerId = UUID.fromString(raw);
 				return Adapter.getAdapter().getOfflinePlayer(playerId);
 			} catch (IllegalArgumentException ignore) {
 			}
-			return Adapter.getAdapter().getOfflinePlayer(argument);
+			return Adapter.getAdapter().getOfflinePlayer(raw);
 		}
 	}
 	
 	final class CheatParameter implements CommandParameter<Cheat> {
 		
 		@Override
-		public @Nullable Cheat parse(String argument) {
-			return Cheat.fromString(argument);
+		public @Nullable Cheat parse(ParameterParser parser) {
+			return Cheat.fromString(parser.next());
 		}
 	}
 }

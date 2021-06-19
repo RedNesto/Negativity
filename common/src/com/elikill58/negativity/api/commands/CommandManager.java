@@ -296,7 +296,11 @@ public class CommandManager implements Listeners {
 			}
 			
 			if (executor == null) {
-				throw new InvalidCommandException("This command has no children nor executor");
+				if (children.isEmpty() || args.length == 0) {
+					throw new InvalidCommandException("This command can not be executed");
+				} else {
+					throw new InvalidCommandException("Unknown subcommand: " + args[0]);
+				}
 			}
 			
 			Class<?>[] parameterTypes = executor.getParameterTypes();
@@ -307,53 +311,31 @@ public class CommandManager implements Listeners {
 			List<Object> parameters = new ArrayList<>(parameterTypes.length);
 			parameters.add(sender);
 			
-			int argumentPointer = 0;
+			ParameterParser parameterParser = new ParameterParser(args);
 			for (int i = 1, parameterTypesLength = parameterTypes.length; i < parameterTypesLength; i++) {
 				Class<?> parameterType = parameterTypes[i];
 				if (parameterType.isArray()) {
 					Class<?> componentType = parameterType.getComponentType();
-					if (argumentPointer == args.length) {
+					if (!parameterParser.hasNext()) {
 						parameters.add(Array.newInstance(componentType, 0));
 						break;
 					}
 					
 					List<Object> values = new ArrayList<>();
-					while (argumentPointer < args.length) {
-						for (Map.Entry<Class<?>, CommandParameter<?>> parameterEntry : CommandManager.this.parameters.entrySet()) {
-							Class<?> paramClass = parameterEntry.getKey();
-							if (componentType.isAssignableFrom(paramClass)) {
-								String rawParameter = args[argumentPointer];
-								Object parseResult = parameterEntry.getValue().parse(rawParameter);
-								if (parseResult != null) {
-									argumentPointer++;
-									values.add(parseResult);
-								} else {
-									throw new InvalidCommandException("Failed to parse parameter '" + rawParameter + "' as " + parameterEntry.getKey().getSimpleName());
-								}
-							}
-						}
+					while (parameterParser.hasNext()) {
+						values.add(parseParameter(parameterParser, componentType));
 					}
 					// Required to get an array with the correct component type, otherwise executor invocation fails with an IllegalArgumentException
 					Object[] dummyArray = (Object[]) Array.newInstance(componentType, 0);
 					parameters.add(values.toArray(dummyArray));
 					break;
 				} else {
-					for (Map.Entry<Class<?>, CommandParameter<?>> parameterEntry : CommandManager.this.parameters.entrySet()) {
-						Class<?> paramClass = parameterEntry.getKey();
-						if (parameterType.isAssignableFrom(paramClass)) {
-							Object parseResult = parameterEntry.getValue().parse(args[argumentPointer]);
-							if (parseResult != null) {
-								argumentPointer++;
-								parameters.add(parseResult);
-								break;
-							}
-						}
-					}
+					parameters.add(parseParameter(parameterParser, parameterType));
 				}
 			}
 			
-			if (args.length != argumentPointer) {
-				throw new InvalidCommandException("Not all arguments were consumed (got " + args.length + " but parsed " + argumentPointer + ")");
+			if (parameterParser.hasNext()) {
+				throw new InvalidCommandException("Not all arguments were consumed (got " + args.length + " but parsed " + parameterParser.getCursor() + ")");
 			}
 			
 			if (parameters.size() != parameterTypes.length) {
@@ -367,6 +349,21 @@ public class CommandManager implements Listeners {
 			}
 			
 			executor.invoke(null, parameters.toArray());
+		}
+		
+		@SuppressWarnings("unchecked")
+		private <T> T parseParameter(ParameterParser parameterParser, Class<T> parameterType) {
+			CommandParameter<T> parameter = (CommandParameter<T>) CommandManager.this.parameters.get(parameterType);
+			if (parameter == null) {
+				throw new ParameterException("No parameter parser supporting " + parameterType.getName());
+			}
+			
+			T parseResult = parameter.parse(parameterParser);
+			if (parseResult == null) {
+				throw new ParameterException("Failed to parse parameter as " + parameterType.getSimpleName());
+			}
+			
+			return parseResult;
 		}
 		
 		public boolean canExecute(CommandSender sender) throws InvocationTargetException, IllegalAccessException {
