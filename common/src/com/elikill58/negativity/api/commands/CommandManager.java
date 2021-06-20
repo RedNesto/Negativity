@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -220,7 +221,7 @@ public class CommandManager implements Listeners {
 		}
 	}
 	
-	public List<String> suggest(CommandSender sender, String command, String[] args) {
+	public Collection<String> suggest(CommandSender sender, String command, String[] args) {
 		CommandWrapper cmd = cmds.get(command);
 		if (cmd != null) {
 			return cmd.suggest(sender, args);
@@ -230,7 +231,11 @@ public class CommandManager implements Listeners {
 	
 	@EventListener
 	public void onCommand(CommandExecutionEvent e) {
-		execute(e.getSender(), e.getCommand(), e.getArgument());
+		try {
+			execute(e.getSender(), e.getCommand(), e.getArgument());
+		} catch (ParameterException ex) {
+			e.getSender().sendMessage("Invalid parameter: " + ex.getMessage());
+		}
 		//CommandListeners cmd = commands.get(e.getCommand().toLowerCase(Locale.ROOT));
 		//if(cmd != null)
 		//	e.setGoodResult(cmd.onCommand(e.getSender(), e.getArgument(), e.getPrefix()));
@@ -238,6 +243,7 @@ public class CommandManager implements Listeners {
 	
 	@EventListener
 	public void onTab(TabExecutionEvent e) {
+		e.setTabContent(new ArrayList<>(suggest(e.getSender(), e.getCommand(), e.getArgument())));
 		//TabListeners cmd = tabs.get(e.getCommand().toLowerCase(Locale.ROOT));
 		//if(cmd != null)
 		//	e.setTabContent(cmd.onTabComplete(e.getSender(), e.getArgument(), e.getPrefix()));
@@ -375,9 +381,37 @@ public class CommandManager implements Listeners {
 			//return (boolean) condition.invoke(null, sender);
 		}
 		
-		public List<String> suggest(CommandSender sender, String[] args) {
-			// TODO
-			return Collections.emptyList();
+		public Collection<String> suggest(CommandSender sender, String[] args) {
+			if (args.length == 0) {
+				throw new IllegalArgumentException("Args array must not be empty");
+			}
+			
+			List<String> suggestions = new ArrayList<>();
+			if (!this.children.isEmpty()) {
+				if (args.length == 1) {
+					suggestions.addAll(this.children.keySet());
+				} else {
+					CommandWrapper child = this.children.get(args[0]);
+					if (child == null) {
+						return Collections.emptyList();
+					}
+					return child.suggest(sender, Arrays.copyOfRange(args, 1, args.length));
+				}
+			}
+			
+			if (this.executor != null) {
+				Class<?>[] parameterTypes = this.executor.getParameterTypes();
+				if (args.length < parameterTypes.length) {
+					Class<?> parameterType = parameterTypes[args.length];
+					if (parameterType.isArray()) {
+						// TODO
+					}
+					CommandParameter<?> parameter = CommandManager.this.parameters.get(parameterType);
+					ParameterParser parser = new ParameterParser(args);
+					suggestions.addAll(parameter.suggest(parser));
+				}
+			}
+			return suggestions;
 		}
 	}
 }
