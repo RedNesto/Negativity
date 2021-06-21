@@ -403,12 +403,21 @@ public class CommandManager implements Listeners {
 				Class<?>[] parameterTypes = this.executor.getParameterTypes();
 				if (args.length < parameterTypes.length) {
 					Class<?> parameterType = parameterTypes[args.length];
-					if (parameterType.isArray()) {
-						// TODO
+					if (!parameterType.isArray()) {
+						CommandParameter<?> parameter = CommandManager.this.parameters.get(parameterType);
+						ParameterParser parser = new ParameterParser(args);
+						suggestions.addAll(parameter.suggest(parser));
 					}
-					CommandParameter<?> parameter = CommandManager.this.parameters.get(parameterType);
-					ParameterParser parser = new ParameterParser(args);
-					suggestions.addAll(parameter.suggest(parser));
+				}
+				
+				if (args.length >= parameterTypes.length) {
+					Class<?> lastParameterType = parameterTypes[parameterTypes.length - 1];
+					if (lastParameterType.isArray()) {
+						Class<?> componentType = lastParameterType.getComponentType();
+						CommandParameter<?> parameter = CommandManager.this.parameters.get(componentType);
+						ParameterParser parser = new ParameterParser(args);
+						suggestions.addAll(parameter.suggest(parser));
+					}
 				}
 			}
 			return suggestions;

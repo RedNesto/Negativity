@@ -87,5 +87,10 @@ public interface CommandParameter<T> {
 		public @Nullable Cheat parse(ParameterParser parser) {
 			return Cheat.fromString(parser.next());
 		}
+		
+		@Override
+		public Collection<String> suggest(ParameterParser parser) {
+			return Cheat.getCheatKeys();
+		}
 	}
 }
