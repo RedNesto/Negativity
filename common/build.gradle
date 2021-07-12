@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id 'com.github.johnrengelman.shadow'
+    id "me.champeau.jmh" version "0.6.5"
 }
 
 sourceSets {
@@ -13,6 +14,10 @@ sourceSets {
     test {
         java.srcDirs = ['testSrc']
         resources.srcDirs = ['testResources']
+    }
+    jmh {
+        java.srcDirs = ['benchmarkSrc']
+        resources.srcDirs = ['benchmarkResources']
     }
 }
 
@@ -55,6 +60,7 @@ test {
 }
 
 InstrumentClassesTask.setupInstrumentation(project, sourceSets.main)
+InstrumentClassesTask.setupInstrumentation(project, sourceSets.jmh)
 
 //task instrumentMainClasses(type: InstrumentClassesTask) {
 //    SourceSet sourceSet = sourceSets.main

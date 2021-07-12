@@ -8,6 +8,8 @@
 !/resources/
 !/testSrc/
 !/testResources/
+!/benchmarkSrc/
+!/benchmarkResources/
 
 !/integrations/
 /integrations/*/*
