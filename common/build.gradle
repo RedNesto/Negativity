@@ -1,3 +1,4 @@
+import com.elikill58.negativity.build.InstrumentClassesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -52,3 +53,24 @@ parent.tasks.named('shadowJar', ShadowJar) {
 test {
     useJUnitPlatform()
 }
+
+InstrumentClassesTask.setupInstrumentation(project, sourceSets.main)
+
+//task instrumentMainClasses(type: InstrumentClassesTask) {
+//    SourceSet sourceSet = sourceSets.main
+//    dependsOn(sourceSet.classesTaskName)
+//    def classesDirs = sourceSet.output.classesDirs.files
+//    inputClassesDirs.setFrom(classesDirs)
+//    def instrumentedOutputDir = new File(classesDirs.first().parentFile, 'main-instrumented')
+//    outputDir.convention(project.layout.projectDirectory.dir(instrumentedOutputDir.path))
+//}
+//
+//task postInstrumentMainClasses {
+//    dependsOn(instrumentMainClasses)
+//    SourceSet sourceSet = sourceSets.main
+//    DirectoryProperty instrumentationOutput = instrumentMainClasses.outputDir
+//    ConfigurableFileCollection classesDirs = sourceSet.output.classesDirs as ConfigurableFileCollection
+//    doLast { classesDirs.setFrom(instrumentationOutput) }
+//}
+//
+//sourceSets.main.compiledBy postInstrumentMainClasses
